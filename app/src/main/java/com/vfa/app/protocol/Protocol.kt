@@ -202,11 +202,11 @@ object Protocol {
             type = StageType.ACTION,
             kicker = "SET UP · PHONE",
             title = "Take phone out",
-            instruction = "Remove the phone from the reader after the first photo. Keep the " +
-                "reader nearby, because the phone goes back into it for the final analyzer photo.",
+            instruction = "Remove the phone and the bottom half from the reader after the first " +
+                "photo. Keep the reader nearby, because both go back in for the final analyzer photo.",
             help = "The middle steps use the phone camera to check the hands-on work from " +
-                "outside the reader. Do not change the reader or bottom-case position more than " +
-                "needed; the final photo should match the first photo as closely as possible.",
+                "outside the reader. Keep holding the bottom half by the edges, and do not touch " +
+                "the membrane. The final photo should match the first photo as closely as possible.",
         ),
         Stage(
             type = StageType.REAGENT,
