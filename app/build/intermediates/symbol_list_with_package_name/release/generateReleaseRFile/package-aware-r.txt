@@ -1,0 +1,27 @@
+com.vfa.app
+color black
+color coral
+color cream
+color navy
+color white
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable vfa_bottom_case
+drawable vfa_buffer
+drawable vfa_pipette
+drawable vfa_reader
+drawable vfa_top_case
+mipmap ic_launcher
+mipmap ic_launcher_round
+raw cassette_insert_3d
+raw pipetting_real
+raw pipetting_vfa
+raw reader_mount_3d
+raw screwing_vfa
+raw unscrewing_vfa
+raw vfa_assemble_video
+raw vfa_initial_video
+string app_name
+style Theme_Vfa
+xml backup_rules
+xml data_extraction_rules

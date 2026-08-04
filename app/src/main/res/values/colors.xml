@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Warm ivory canvas + coral accent — the VFA_App_Real palette. -->
+    <color name="cream">#FFFAF7F4</color>
+    <color name="coral">#FFE8674A</color>
+    <color name="navy">#FF1A2340</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="coral">#FFE8674A</color>
+    <color name="cream">#FFFAF7F4</color>
+    <color name="navy">#FF1A2340</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="app_name">VFA</string>
+    <style name="Theme.Vfa" parent="android:Theme.Material.Light.NoActionBar"/>
+</resources>

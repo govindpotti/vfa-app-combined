@@ -1,0 +1,8 @@
+com.vfa.app-pngs-0 /Users/govindpotti/vfa-app-combined/app/build/generated/res/pngs/debug
+com.vfa.app-updated_navigation_xml-1 /Users/govindpotti/vfa-app-combined/app/build/generated/updated_navigation_xml/debug
+com.vfa.app-packageDebugResources-2 /Users/govindpotti/vfa-app-combined/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.vfa.app-packageDebugResources-3 /Users/govindpotti/vfa-app-combined/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.vfa.app-debug-4 /Users/govindpotti/vfa-app-combined/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.vfa.app-debug-5 /Users/govindpotti/vfa-app-combined/app/src/debug/res
+com.vfa.app-main-6 /Users/govindpotti/vfa-app-combined/app/src/main/res
+gradleHome-0 /Users/govindpotti/.gradle

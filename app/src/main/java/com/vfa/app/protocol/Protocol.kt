@@ -1,0 +1,300 @@
+package com.vfa.app.protocol
+
+import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
+import com.vfa.app.R
+
+// ─────────────────────────────────────────────────────────────────────────────
+// The protocol, as data.
+//
+// The whole 14-stage assay is the [stages] list below, and every screen is derived
+// from it. Adding, removing or re-wording a step means editing this list — no screen
+// or navigation code changes. The progress badge, the "STEP · …" kickers and the
+// checkpoint ids all come from here.
+//
+// The copy is written for a clinician at the point of care: someone who has just taken
+// a blood sample from the patient in front of them and is running the test then and
+// there. It gives the exact volumes and the technique that changes the result, in plain
+// words — not laboratory process language. They are qualified; they are not a lab. The
+// detail that does matter (why both photos need the same settings, why you blot rather
+// than wipe) sits one tap away rather than on the screen.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** What kind of screen a stage renders as. */
+enum class StageType {
+    /** Instruction + Continue. No camera check. */
+    ACTION,
+
+    /** Instruction + demo visuals + "Done — check this step" → camera checkpoint. */
+    REAGENT,
+
+    /** Countdown timer. */
+    WAIT,
+
+    /** Reader photo through the phone camera (baseline before signal, or the final read). */
+    SCAN,
+}
+
+enum class ScanKind { BASELINE, FINAL }
+
+/**
+ * One visual for a step: a bundled clip. These are the real assets — the Blender 3D
+ * renders of the cassette from the guided app, and the filmed demonstrations from
+ * VFA_App_Real. Where a step has both, the user can switch between them; the render
+ * shows the mechanics cleanly, the footage shows a real hand doing it.
+ */
+data class Clip(val label: String, @param:RawRes val res: Int)
+
+data class Stage(
+    val type: StageType,
+    val kicker: String,
+    val title: String,
+    val instruction: String,
+    /** Longer "More detail" text, hidden behind the help accordion. */
+    val help: String,
+    val clips: List<Clip> = emptyList(),
+    /** Step id the checkpoint AI grades (see step_verifier/config.py). null = no camera check. */
+    val checkpoint: String? = null,
+    /** WAIT only. */
+    val seconds: Int = 0,
+    /** SCAN only. */
+    val scan: ScanKind? = null,
+)
+
+/** The tests this kit runs. Same steps either way; different antibodies, different result. */
+enum class TestType(
+    val displayName: String,
+    val tagline: String,
+    /** How the result screen names what was looked for. */
+    val antibodies: String,
+) {
+    LYME("Lyme disease", "Looks for Lyme antibodies", "Lyme antibodies"),
+    BABESIOSIS("Babesiosis", "Looks for Babesia antibodies", "Babesia antibodies"),
+}
+
+/** One row on the "what you need" screen. */
+data class KitItem(
+    val name: String,
+    val hint: String,
+    /** How many of this item the run needs. Shown as stacked copies plus a count. */
+    val quantity: Int = 1,
+    /** Product photo, when we have one for this item. */
+    @param:DrawableRes val photo: Int? = null,
+    /** Otherwise a drawn emblem in the same visual language. */
+    val emblem: Emblem? = null,
+) {
+    enum class Emblem { TUBE, GOLD_BOTTLE, WIPES }
+}
+
+object Protocol {
+
+    // The Blender renders of the cassette (from the guided app) and the filmed
+    // demonstrations (from VFA_App_Real). Every hands-on stage points at one or both.
+    private val pipetting = Clip("3D render", R.raw.pipetting_vfa)
+    private val screwing = Clip("3D render", R.raw.screwing_vfa)
+    private val unscrewing = Clip("3D render", R.raw.unscrewing_vfa)
+    private val pipettingReal = Clip("Real footage", R.raw.pipetting_real)
+    private val readerFootage = Clip("Real footage", R.raw.vfa_initial_video)
+    private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
+    // Rendered from the reader and cassette STLs — the two actions the earlier
+    // clips never covered: fitting the reader, and loading the bottom case.
+    private val readerMount = Clip("3D render", R.raw.reader_mount_3d)
+    private val cassetteInsert = Clip("3D render", R.raw.cassette_insert_3d)
+
+    /** The clip used as the landing-screen fallback if the STL can't be read. */
+    val heroClip: Clip get() = screwing
+
+    val kit = listOf(
+        KitItem(
+            "Smartphone reader", "3D-printed clip that fits over the phone camera",
+            photo = R.drawable.vfa_reader
+        ),
+        KitItem(
+            "Bottom case", "Holds the sensing membrane",
+            photo = R.drawable.vfa_bottom_case
+        ),
+        KitItem(
+            "Top cases", "Two per test — one gets swapped partway",
+            quantity = 2,
+            photo = R.drawable.vfa_top_case
+        ),
+        KitItem(
+            "Running buffer", "For the 200 µL steps",
+            photo = R.drawable.vfa_buffer
+        ),
+        KitItem(
+            "Blood sample", "From the patient, ready to use",
+            emblem = KitItem.Emblem.TUBE
+        ),
+        KitItem(
+            "Gold solution", "Mix it before you draw it up",
+            emblem = KitItem.Emblem.GOLD_BOTTLE
+        ),
+        KitItem(
+            "Pipette and tips", "For the volumes in this test",
+            photo = R.drawable.vfa_pipette
+        ),
+        KitItem(
+            "Lint-free wipes", "To blot the membrane before the last photo",
+            emblem = KitItem.Emblem.WIPES
+        ),
+    )
+
+    val stages: List<Stage> = listOf(
+        Stage(
+            type = StageType.ACTION,
+            kicker = "SET UP · READER",
+            title = "Fit the reader",
+            instruction = "Fit the reader over the phone camera. Adjust the shutter speed until " +
+                "the membrane looks evenly lit.",
+            help = "The reader blocks outside light so both photos are taken the same way — not " +
+                "too bright, not too dark. Once it's set, leave it alone. The app compares the " +
+                "two photos against each other, so they need matching settings.",
+            clips = listOf(readerMount, readerFootage),
+        ),
+        Stage(
+            type = StageType.ACTION,
+            kicker = "SET UP · BOTTOM CASE",
+            title = "Take the bottom case",
+            instruction = "Take the bottom case — the half with the membrane in it. Hold it by " +
+                "the edges.",
+            help = "The membrane is what gets read. Don't touch its face or set it down on the " +
+                "surface; fingerprints and fibres both show up in the result.",
+            clips = listOf(unscrewing),
+        ),
+        Stage(
+            type = StageType.SCAN,
+            scan = ScanKind.BASELINE,
+            kicker = "PHOTO · BEFORE",
+            title = "First photo",
+            instruction = "Put the bottom case in the reader and photograph the membrane before " +
+                "anything is added. Line up the top-right corner.",
+            help = "This is the \u201cbefore\u201d photo. The app compares the final photo " +
+                "against it, which is how it tells a real signal from the membrane's own " +
+                "background. Take it on the same reader, at the same settings, as the last photo.",
+            clips = listOf(cassetteInsert, readerFootage),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "assemble",
+            kicker = "STEP · ASSEMBLE",
+            title = "Assemble the cassette",
+            instruction = "Screw a top case onto the bottom case until it sits flat, with no gap " +
+                "around the edge.",
+            help = "Line the well up over the membrane, then twist until it stops. If it isn't " +
+                "fully closed it leaks around the edge and the liquid won't flow straight down " +
+                "through the membrane.",
+            clips = listOf(screwing, assembleFootage),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "add_buffer",
+            kicker = "STEP · RUNNING BUFFER",
+            title = "Add running buffer",
+            instruction = "Add 200 µL of running buffer to the well. Wait until it has all " +
+                "drained through.",
+            help = "Dispense against the side of the well rather than straight onto the " +
+                "membrane. Wait until the well looks empty — liquid left behind carries into the " +
+                "next step and throws the timing out.",
+            clips = listOf(pipetting, pipettingReal),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "add_sample",
+            kicker = "STEP · BLOOD SAMPLE",
+            title = "Add the blood sample",
+            instruction = "Add the patient's blood sample to the well. Wait until it has all " +
+                "drained through.",
+            help = "Check the label against the patient before you add it, and use a fresh tip.",
+            clips = listOf(pipetting, pipettingReal),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "add_buffer",
+            kicker = "STEP · RUNNING BUFFER",
+            title = "Add running buffer",
+            instruction = "Add another 200 µL of running buffer. Wait until it has all drained " +
+                "through.",
+            help = "This pushes the sample the rest of the way through the membrane. Let it " +
+                "clear completely before the timer starts.",
+            clips = listOf(pipetting, pipettingReal),
+        ),
+        Stage(
+            type = StageType.WAIT,
+            seconds = 600,
+            kicker = "WAIT · 10 MINUTES",
+            title = "Wait 10 minutes",
+            instruction = "Leave the cassette flat and don't move it. You'll be told when the " +
+                "time is up.",
+            help = "Antibodies are sticking to the spots on the membrane as the liquid moves " +
+                "down through it. Moving or tilting the cassette now will skew the result.",
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "swap_case",
+            kicker = "STEP · TOP CASE",
+            title = "Swap the top case",
+            instruction = "Unscrew the used top case and put a fresh one on the same bottom case.",
+            help = "The used top case has blood in it — put it straight into biohazard waste, " +
+                "and never use it on another test. The bottom case, with the membrane, stays.",
+            clips = listOf(unscrewing),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "add_gold",
+            kicker = "STEP · GOLD SOLUTION",
+            title = "Add gold solution",
+            instruction = "Add 200 pL of gold solution to the well. Wait until it has all " +
+                "drained through.",
+            help = "The gold solution is what brings the colour out on the spots. Mix it gently " +
+                "before you draw it up — it settles — and try not to introduce bubbles.",
+            clips = listOf(pipetting, pipettingReal),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "add_gold",
+            kicker = "STEP · GOLD SOLUTION",
+            title = "Add gold solution",
+            instruction = "Add another 50 pL of gold solution. Wait until it has all drained " +
+                "through.",
+            help = "A smaller amount this time. Same technique — mix, dispense against the side " +
+                "of the well, wait for it to clear.",
+            clips = listOf(pipetting, pipettingReal),
+        ),
+        Stage(
+            type = StageType.REAGENT,
+            checkpoint = "add_buffer",
+            kicker = "STEP · LAST WASH",
+            title = "Last wash",
+            instruction = "Add 200 pL of running buffer to wash out anything left over.",
+            help = "Gold solution left on the membrane darkens the background and makes the " +
+                "result harder to read. Let this wash clear completely.",
+            clips = listOf(pipetting, pipettingReal),
+        ),
+        Stage(
+            type = StageType.WAIT,
+            seconds = 600,
+            kicker = "WAIT · 10 MINUTES",
+            title = "Wait 10 minutes",
+            instruction = "Start the timer now everything has been added. Leave the cassette " +
+                "flat and don't move it.",
+            help = "The colour is coming up on the spots. Reading it early makes the result look " +
+                "weaker than it is; leaving it much longer lets the background darken.",
+        ),
+        Stage(
+            type = StageType.SCAN,
+            scan = ScanKind.FINAL,
+            kicker = "PHOTO · RESULT",
+            title = "Last photo",
+            instruction = "Blot the membrane with a lint-free wipe, put the bottom case in the " +
+                "reader, and take the photo. Line up the top-right corner and keep the membrane " +
+                "centred.",
+            help = "Blot, don't wipe — dragging across the membrane smears the colour. Use the " +
+                "same reader and the same settings as the first photo, or the comparison won't " +
+                "hold. Centre the membrane so the left and right of the frame look even.",
+            clips = listOf(cassetteInsert, readerFootage),
+        ),
+    )
+
+    val count: Int get() = stages.size
+}

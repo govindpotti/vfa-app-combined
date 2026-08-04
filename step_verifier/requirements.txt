@@ -1,0 +1,9 @@
+# CPU wheels are fine for training a few small models and serving.
+torch>=2.2
+torchvision>=0.17
+pillow>=10.0
+numpy>=1.24
+flask>=3.0
+gunicorn>=21.2
+# Optional — ONNX export / on-device conversion:
+# onnx>=1.15
