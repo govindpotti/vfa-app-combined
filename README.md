@@ -78,8 +78,8 @@ Every hands-on stage plays a looping, silent clip. There are two kinds and some 
 switchable with a chip:
 
 - **3D render** — Blender renders of the real cassette (`pipetting_vfa`, `screwing_vfa`,
-  `unscrewing_vfa`, from the guided app). Clean mechanics: where the liquid goes, which way the
-  case twists.
+  `swap_top_sequence`, from the guided app). Clean mechanics: where the liquid goes, which way
+  the case twists.
 - **Real footage** — filmed lab demonstrations (`attaching_phone`, `attaching_vfa`,
   `vfa_assemble_video`, from VFA_App_Real). A real gloved hand doing the real thing.
 

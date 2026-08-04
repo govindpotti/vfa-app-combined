@@ -99,7 +99,7 @@ object Protocol {
     // demonstrations (from VFA_App_Real). Every hands-on stage points at one or both.
     private val pipetting = Clip("3D render", R.raw.pipetting_vfa)
     private val screwing = Clip("3D render", R.raw.screwing_vfa)
-    private val unscrewing = Clip("3D render", R.raw.unscrewing_vfa)
+    private val swapTopSequence = Clip("Swap top", R.raw.swap_top_sequence)
     private val pipettingReal = Clip("Real footage", R.raw.pipetting_real)
     private val pipettingRealBuffer = Clip(
         "Real footage",
@@ -258,7 +258,7 @@ object Protocol {
             instruction = "Unscrew the used top case and put a fresh one on the same bottom case.",
             help = "The used top case has blood in it — put it straight into biohazard waste, " +
                 "and never use it on another test. The bottom case, with the membrane, stays.",
-            clips = listOf(unscrewing),
+            clips = listOf(swapTopSequence),
         ),
         Stage(
             type = StageType.REAGENT,
