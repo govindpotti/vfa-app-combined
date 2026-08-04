@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vfa.app.backend.AnalyzerResult
 import com.vfa.app.backend.Readout
 import com.vfa.app.backend.Verdict
 import com.vfa.app.protocol.TestType
@@ -46,6 +47,7 @@ fun ResultScreen(
     patientLabel: String,
     verdict: Verdict,
     readout: Readout?,
+    analyzerFailure: AnalyzerResult.Failed?,
     onStartNew: () -> Unit,
     onToggleDemo: () -> Unit,
 ) {
@@ -120,6 +122,18 @@ fun ResultScreen(
                     fontFamily = TitleFont, fontSize = 30.sp, fontWeight = FontWeight.Bold,
                     color = Navy, textAlign = TextAlign.Center, lineHeight = 35.sp
                 )
+                if (!measured && analyzerFailure != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        analyzerFailure.title,
+                        fontFamily = BodyFont,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AmberInk,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 21.sp
+                    )
+                }
 
                 if (patientLabel.isNotBlank()) {
                     Spacer(Modifier.height(12.dp))
@@ -138,10 +152,8 @@ fun ResultScreen(
                     label = "What this means",
                     text = when {
                         !measured ->
-                            "The analyzer did not return a measured readout, so this screen is " +
-                                "not reporting a real positive or negative result.\n\n" +
-                                "For a real VFA run, build the app with ANALYZER_URL set and make " +
-                                "sure the phone can reach that service before recording a result."
+                            (analyzerFailure?.detail ?: "The analyzer did not return a measured readout.") +
+                                "\n\nThis screen is not reporting a real positive or negative result."
 
                         negative ->
                             "The test didn't find $antibodies in this blood sample. Antibodies take " +
@@ -174,8 +186,8 @@ fun ResultScreen(
                         val steps = when {
                             !measured -> listOf(
                                 "Do not record this as a positive or negative result.",
-                                "Check the analyzer URL, network connection, and camera alignment.",
-                                "Run the final photo again once the analyzer is reachable."
+                                "Check that the analyzer service is running and reachable from the phone.",
+                                "Retake the reader photos once the analyzer is connected."
                             )
                             negative -> listOf(
                                 "Record the result against the patient.",
@@ -213,7 +225,7 @@ fun ResultScreen(
                 }
 
                 Spacer(Modifier.height(16.dp))
-                MeasurementCard(readout)
+                MeasurementCard(readout, analyzerFailure)
 
                 Spacer(Modifier.height(22.dp))
                 CTAButton("Start a new test", onStartNew)
@@ -234,7 +246,7 @@ fun ResultScreen(
  * service ran — otherwise the screen says plainly that nothing was measured.
  */
 @Composable
-private fun MeasurementCard(readout: Readout?) {
+private fun MeasurementCard(readout: Readout?, analyzerFailure: AnalyzerResult.Failed?) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -242,7 +254,7 @@ private fun MeasurementCard(readout: Readout?) {
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                if (readout != null) "MEASURED SIGNAL" else "SIMULATED RESULT — NOT MEASURED",
+                if (readout != null) "MEASURED SIGNAL" else "NO MEASURED READOUT",
                 fontFamily = BodyFont, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold,
                 color = Muted, letterSpacing = 1.2.sp
             )
@@ -266,9 +278,10 @@ private fun MeasurementCard(readout: Readout?) {
                 }
             } else {
                 Text(
-                    "No readout service is set up, so this is a demonstration — it was not " +
-                        "measured from the membrane and must not be recorded. Deploy /server " +
-                        "and set ANALYZER_URL to read the real signal.",
+                    analyzerFailure?.detail ?: (
+                        "No readout service is set up, so this was not measured from the " +
+                            "membrane and must not be recorded."
+                    ),
                     fontFamily = BodyFont, fontSize = 12.sp, color = Muted, lineHeight = 18.sp
                 )
             }

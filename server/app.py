@@ -25,6 +25,7 @@ import sys
 import cv2
 import numpy as np
 from flask import Flask, jsonify, request
+from PIL import Image, ImageOps
 
 # --- Reuse the lab's analyzer helpers unchanged -----------------------------------------
 ANALYZER_DIR = os.path.abspath(
@@ -61,12 +62,32 @@ THRESH = [3, 1, 0.5]  # [filter1 (std), upper, lower] — same as quantify_VFA.p
 DEFAULT_R = 60
 MEAN_ONLY = [0, 1, 0, 0]  # getStats "commands": std, mean, max, min -> mean only
 SPOT_KEYS = [k for k in pointMapInit if k not in ("A", "B", "C", "D")]
+MIN_ANALYZER_WIDTH = XMAX + 20
+MIN_ANALYZER_HEIGHT = YMAX + 20
 
 app = Flask(__name__)
 
 
-def analyze_bgr(image_bgr, r=DEFAULT_R):
-    """Return {spot_key: mean_red_intensity} and an alignment error flag for one BGR image."""
+def normalize_capture(image_bgr):
+    """Scale phone JPEGs into the coordinate space expected by the legacy analyzer."""
+    h, w = image_bgr.shape[:2]
+    scale = max(MIN_ANALYZER_WIDTH / max(1, w), MIN_ANALYZER_HEIGHT / max(1, h), 1.0)
+    if scale <= 1.0:
+        return image_bgr
+    return cv2.resize(
+        image_bgr,
+        (int(round(w * scale)), int(round(h * scale))),
+        interpolation=cv2.INTER_CUBIC,
+    )
+
+
+def analyze_prepared_bgr(image_bgr, r=DEFAULT_R):
+    """Return {spot_key: mean_red_intensity} and an alignment error flag for one normalized image."""
+    image_bgr = normalize_capture(image_bgr)
+    h, w = image_bgr.shape[:2]
+    if h < YMAX or w < XMAX:
+        raise ValueError(f"image too small after normalization: {w}x{h}")
+
     cropped = image_bgr[YMIN:YMAX, XMIN:XMAX]
     aligned, err = alignImage(cropped, "upload", DIST_A_TO_B, MARKER_A, template_dictionary)
     point_map, err = localizeWithCentroid(aligned, pointMapInit, False, err)
@@ -77,6 +98,30 @@ def analyze_bgr(image_bgr, r=DEFAULT_R):
         stats = getStats(red, r, point_map[k], MEAN_ONLY, 0, THRESH, "", "upload")
         spots[k] = float(stats[0])
     return spots, bool(err)
+
+
+def analyze_bgr(image_bgr, r=DEFAULT_R):
+    """Analyze one BGR image, trying common phone orientations before giving up."""
+    candidates = [
+        image_bgr,
+        cv2.rotate(image_bgr, cv2.ROTATE_90_CLOCKWISE),
+        cv2.rotate(image_bgr, cv2.ROTATE_90_COUNTERCLOCKWISE),
+        cv2.rotate(image_bgr, cv2.ROTATE_180),
+    ]
+    last_error = None
+    fallback = None
+    for candidate in candidates:
+        try:
+            spots, err = analyze_prepared_bgr(candidate, r)
+            if not err:
+                return spots, err
+            fallback = fallback or (spots, err)
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+
+    if fallback is not None:
+        return fallback
+    raise ValueError(f"could not align image: {last_error}")
 
 
 def verdict_from(spots):
@@ -95,8 +140,13 @@ def decode(file_storage):
         import rawpy  # lazy — only needed for raw DNG input
         with rawpy.imread(io.BytesIO(data)) as raw:
             return np.flip(raw.postprocess(), axis=2)
-    arr = np.frombuffer(data, np.uint8)
-    return cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    try:
+        image = Image.open(io.BytesIO(data))
+        image = ImageOps.exif_transpose(image).convert("RGB")
+        return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    except Exception:
+        arr = np.frombuffer(data, np.uint8)
+        return cv2.imdecode(arr, cv2.IMREAD_COLOR)
 
 
 @app.get("/health")

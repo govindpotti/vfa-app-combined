@@ -1,6 +1,7 @@
 flask>=3.0
 numpy>=1.24
 opencv-python-headless>=4.8
+pillow>=10.0
 # Optional — only needed if you POST raw .dng images:
 # rawpy>=0.18
 gunicorn>=21.2

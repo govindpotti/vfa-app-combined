@@ -46,6 +46,11 @@ data class Readout(
     val alignmentUncertain: Boolean,
 )
 
+sealed interface AnalyzerResult {
+    data class Measured(val readout: Readout) : AnalyzerResult
+    data class Failed(val title: String, val detail: String) : AnalyzerResult
+}
+
 object VfaBackend {
 
     val verifierUrl: String get() = BuildConfig.VERIFIER_URL.trimEnd('/')
@@ -88,32 +93,83 @@ object VfaBackend {
     /**
      * Quantify the membrane. [baseline] is the before-signal reader photo; when it is
      * present the service subtracts it per spot so illumination and membrane background
-     * cancel out. Returns null when the analyzer can't be reached — the caller simulates.
+     * cancel out. Returns a measured readout or a concrete failure reason for the result
+     * screen; final readout is not simulated.
      */
-    suspend fun analyze(finalFrame: ByteArray?, baseline: ByteArray?): Readout? =
+    suspend fun analyze(finalFrame: ByteArray?, baseline: ByteArray?): AnalyzerResult =
         withContext(Dispatchers.IO) {
             if (analyzerUrl.isEmpty() || finalFrame == null || finalFrame.isEmpty()) {
-                return@withContext null
+                return@withContext AnalyzerResult.Failed(
+                    "Analyzer is not connected",
+                    if (analyzerUrl.isEmpty()) {
+                        "This APK was built without ANALYZER_URL, so the phone has nowhere " +
+                            "to send the reader photo."
+                    } else {
+                        "The camera did not capture a final reader photo."
+                    }
+                )
             }
             try {
+                val health = get("$analyzerUrl/health")
+                if (health?.optBoolean("ok", false) != true) {
+                    return@withContext AnalyzerResult.Failed(
+                        "Analyzer is unreachable",
+                        "The phone could not reach $analyzerUrl. Make sure the analyzer " +
+                            "server is running and the phone is on the same network."
+                    )
+                }
+
                 val body = Multipart().file("image", "final.jpg", "image/jpeg", finalFrame)
                 if (baseline != null && baseline.isNotEmpty()) {
                     body.file("baseline", "baseline.jpg", "image/jpeg", baseline)
                 }
-                val json = post("$analyzerUrl/analyze", body) ?: return@withContext null
-                if (!json.optBoolean("ok", false)) return@withContext null
-                Readout(
-                    verdict = if (json.optString("verdict") == "positive") Verdict.POSITIVE
-                    else Verdict.NEGATIVE,
-                    background = json.optDouble("background", 0.0),
-                    peak = json.optDouble("peak", 0.0),
-                    alignmentUncertain = json.optBoolean("alignment_uncertain", false),
+                val json = post("$analyzerUrl/analyze", body)
+                    ?: return@withContext AnalyzerResult.Failed(
+                        "Analyzer did not answer",
+                        "The analyzer connection opened, but the app did not receive JSON back."
+                    )
+                if (!json.optBoolean("ok", false)) {
+                    return@withContext AnalyzerResult.Failed(
+                        "Analyzer rejected the photo",
+                        json.optString(
+                            "error",
+                            "The analyzer could not process the reader photo. Retake the " +
+                                "baseline and final photos with the reader fully seated."
+                        )
+                    )
+                }
+                AnalyzerResult.Measured(
+                    Readout(
+                        verdict = if (json.optString("verdict") == "positive") Verdict.POSITIVE
+                        else Verdict.NEGATIVE,
+                        background = json.optDouble("background", 0.0),
+                        peak = json.optDouble("peak", 0.0),
+                        alignmentUncertain = json.optBoolean("alignment_uncertain", false),
+                    )
                 )
             } catch (e: Exception) {
-                Log.w(TAG, "analyzer unavailable — simulating the result", e)
-                null
+                Log.w(TAG, "analyzer unavailable", e)
+                AnalyzerResult.Failed(
+                    "Analyzer connection failed",
+                    e.localizedMessage ?: "The app could not send the reader photo to $analyzerUrl."
+                )
             }
         }
+
+    private fun get(url: String): JSONObject? {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 5_000
+            readTimeout = 8_000
+        }
+        return try {
+            val stream = if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream
+            val text = stream?.bufferedReader()?.use { it.readText() } ?: return null
+            JSONObject(text)
+        } finally {
+            conn.disconnect()
+        }
+    }
 
     private fun post(url: String, body: Multipart): JSONObject? {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {

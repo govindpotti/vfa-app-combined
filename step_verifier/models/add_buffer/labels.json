@@ -1,0 +1,10 @@
+{
+  "class_names": [
+    "not_soaked",
+    "ok"
+  ],
+  "input_size": 224,
+  "min_confidence": 0.55,
+  "arch": "mobilenet_v3_small",
+  "val_accuracy": 0.7619
+}

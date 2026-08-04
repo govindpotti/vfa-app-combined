@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.vfa.app.backend.AnalyzerResult
 import com.vfa.app.backend.Readout
 import com.vfa.app.backend.Verdict
 import com.vfa.app.backend.VfaBackend
@@ -47,6 +48,7 @@ fun VfaApp() {
         var baseline by remember { mutableStateOf<ByteArray?>(null) }
         var verdict by remember { mutableStateOf(Verdict.NEGATIVE) }
         var readout by remember { mutableStateOf<Readout?>(null) }
+        var analyzerFailure by remember { mutableStateOf<AnalyzerResult.Failed?>(null) }
 
         val camera = rememberVfaCamera()
 
@@ -74,6 +76,7 @@ fun VfaApp() {
             kit = List(Protocol.kit.size) { false }
             baseline = null
             readout = null
+            analyzerFailure = null
             verdict = Verdict.NEGATIVE
             screen = Screen.LANDING
         }
@@ -154,9 +157,17 @@ fun VfaApp() {
                         if (stage.scan == ScanKind.FINAL) {
                             // Both photos go up together so the analyzer can subtract the
                             // before-signal reference; null means it simulated.
-                            val result = VfaBackend.analyze(frame, baseline)
-                            readout = result
-                            if (result != null) verdict = result.verdict
+                            when (val result = VfaBackend.analyze(frame, baseline)) {
+                                is AnalyzerResult.Measured -> {
+                                    readout = result.readout
+                                    analyzerFailure = null
+                                    verdict = result.readout.verdict
+                                }
+                                is AnalyzerResult.Failed -> {
+                                    readout = null
+                                    analyzerFailure = result
+                                }
+                            }
                             screen = Screen.RESULT
                         } else {
                             baseline = frame
@@ -170,6 +181,7 @@ fun VfaApp() {
                     patientLabel = patientLabel,
                     verdict = verdict,
                     readout = readout,
+                    analyzerFailure = analyzerFailure,
                     onStartNew = { restart() },
                     onToggleDemo = {
                         verdict = if (verdict == Verdict.NEGATIVE) Verdict.POSITIVE else Verdict.NEGATIVE

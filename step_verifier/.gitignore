@@ -1,5 +1,8 @@
 data/
-models/
+models/*
+!models/add_buffer/
+!models/add_buffer/model.pt
+!models/add_buffer/labels.json
 __pycache__/
 *.pyc
 .venv/

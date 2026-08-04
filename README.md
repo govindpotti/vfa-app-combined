@@ -146,27 +146,57 @@ localizes the 17 spots, measures red-channel intensity, subtracts the baseline p
 ### `step_verifier/` — checkpoint AI (PyTorch)
 Per-step MobileNetV3-Small classifiers. `POST /verify` with `image`, `step`, `attempt` returns
 `pass` / `retry(reason)` / `help` / `unavailable`. `config.py` is the single source of truth for
-each checkpoint's classes and the spoken reason for each failure. There is **no training data
-yet** — `tools/make_dummy_data.py` + `train.py --smoke` exercise the whole pipeline with
-synthetic images; `step_verifier/README.md` describes the data layout to fill in
-(`data/<step_id>/<class_name>/*.jpg`).
+each checkpoint's classes and the spoken reason for each failure. A starter `add_buffer` model is
+included under `step_verifier/models/add_buffer`; more classes/photos can be added later and
+retrained with `step_verifier/train.py`. `tools/make_dummy_data.py` + `train.py --smoke`
+exercise the whole pipeline with synthetic images; `step_verifier/README.md` describes the data
+layout to fill in (`data/<step_id>/<class_name>/*.jpg`).
 
-### Wiring them up
+### Real-phone workflow from GitHub
+
+On the laptop that will talk to the LG phone:
 
 ```bash
-cd server && pip install -r requirements.txt && python app.py          # :8000  /analyze
-cd step_verifier && pip install -r requirements.txt && python serve.py # :8010  /verify
+git pull
+./scripts/start-services.sh
+./scripts/build-phone-apk.sh
+./scripts/install-phone-apk.sh
 ```
 
-Then set the endpoints in [`app/build.gradle.kts`](app/build.gradle.kts):
+`start-services.sh` creates local Python virtualenvs, installs the analyzer/verifier
+dependencies, starts the Flask services, and prints this laptop's LAN URLs. Before running the
+test, open the printed analyzer health URL on the LG browser, for example:
 
-```kotlin
-buildConfigField("String", "ANALYZER_URL", "\"https://your-analyzer-host\"")
-buildConfigField("String", "VERIFIER_URL", "\"https://your-verifier-host\"")
+```text
+http://192.168.x.x:8001/health
 ```
 
-Nothing else changes — the app already POSTs to both, maps every response, and falls back when
-they aren't there.
+If the LG can load that JSON, the app can reach the analyzer. If it cannot, fix Wi-Fi/IP/firewall
+first — rebuilding the APK will not help until the phone can reach the service.
+
+`build-phone-apk.sh` detects the laptop IP and bakes these URLs into the APK:
+
+```text
+ANALYZER_URL=http://<this-laptop-ip>:8001
+VERIFIER_URL=http://<this-laptop-ip>:8010
+```
+
+Override the detection when needed:
+
+```bash
+HOST_IP=192.168.1.42 ./scripts/build-phone-apk.sh
+ANALYZER_URL=https://example.ngrok.app ./scripts/build-phone-apk.sh
+```
+
+Stop the local services with:
+
+```bash
+./scripts/stop-services.sh
+```
+
+Nothing else changes — the app POSTs the baseline/final reader photos to `/analyze`, maps the
+response into the result screen, and shows a concrete connection/analyzer error if the readout
+service is not usable.
 
 ---
 

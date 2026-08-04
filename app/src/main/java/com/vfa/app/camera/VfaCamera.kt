@@ -45,23 +45,36 @@ import kotlin.coroutines.resume
 
 private const val TAG = "VfaCamera"
 private val PREVIEW_TARGET = Size(960, 720)
-private val CAPTURE_TARGET = Size(1280, 960)
+private val CAPTURE_TARGET = Size(2560, 1920)
 
-private fun lowPowerSelector(size: Size) = ResolutionSelector.Builder()
+private fun cameraSelector(
+    size: Size,
+    allowedResolutionMode: Int = ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION
+) = ResolutionSelector.Builder()
     .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
     .setResolutionStrategy(
-        ResolutionStrategy(size, ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)
+        ResolutionStrategy(size, ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER)
     )
-    .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
+    .setAllowedResolutionMode(allowedResolutionMode)
     .build()
 
 class VfaCameraState internal constructor(private val context: Context) {
 
     internal val controller: LifecycleCameraController = LifecycleCameraController(context).apply {
         setEnabledUseCases(LifecycleCameraController.IMAGE_CAPTURE)
-        imageCaptureMode = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
-        setPreviewResolutionSelector(lowPowerSelector(PREVIEW_TARGET))
-        setImageCaptureResolutionSelector(lowPowerSelector(CAPTURE_TARGET))
+        imageCaptureMode = ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
+        setPreviewResolutionSelector(
+            cameraSelector(
+                PREVIEW_TARGET,
+                ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION
+            )
+        )
+        setImageCaptureResolutionSelector(
+            cameraSelector(
+                CAPTURE_TARGET,
+                ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE
+            )
+        )
     }
     private var usingLowPowerTargets = true
 

@@ -6,10 +6,10 @@ and decides whether the step was done correctly, returning the app's exact contr
 **FlagForHelp** (escalate). It covers the materials check and the four hands-on steps
 (assemble, first wash, add sample, final wash).
 
-There's **no training data yet** — this is the backbone. Everything runs and degrades
-gracefully: any step without a trained model returns `unavailable`, and the app falls back to
-its simulated checkpoint, so the whole flow keeps working. Drop in images, train, and each
-step goes live one at a time.
+There is a starter `add_buffer` model trained from the first buffer-flow photos. Everything
+else still degrades gracefully: any step without a trained model returns `unavailable`, and the
+app falls back to its simulated checkpoint, so the whole flow keeps working. Drop in more
+images, train, and each step goes live one at a time.
 
 ## How it works
 - **Transfer learning** from MobileNetV3-Small (ImageNet) — small, fast, and works with only a
