@@ -101,7 +101,7 @@ object Protocol {
     private val pipetting = Clip("3D render", R.raw.pipetting_vfa)
     private val screwing = Clip("3D render", R.raw.screwing_vfa)
     private val unscrewing = Clip("Unscrew", R.raw.unscrewing_vfa)
-    private val attachNewTop = Clip("Attach new top", R.raw.attach_new_top)
+    private val attachNewTop = Clip("Attach new top", R.raw.screwing_vfa)
     private val pipettingReal = Clip("Real footage", R.raw.pipetting_real)
     private val pipettingRealBuffer = Clip(
         "Real footage",
