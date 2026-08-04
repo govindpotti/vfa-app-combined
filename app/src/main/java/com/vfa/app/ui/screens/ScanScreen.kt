@@ -95,8 +95,6 @@ fun ScanScreen(
                         color = Scan, letterSpacing = 1.4.sp
                     )
                     Spacer(Modifier.height(14.dp))
-                    // Same switcher as the step screens, so the render and the
-                    // filmed version are both reachable here too.
                     StepVisual(clips = stage.clips, height = 300.dp)
                     Spacer(Modifier.height(16.dp))
                     GhostButton("Close") { showDemo = false }
@@ -155,6 +153,33 @@ fun ScanScreen(
             title = stage.title,
             isFinal = stage.scan == ScanKind.FINAL
         )
+    }
+}
+
+@Composable
+private fun WatchRow(onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = White,
+        border = androidx.compose.foundation.BorderStroke(1.5.dp, Line)
+    ) {
+        Row(
+            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier.size(30.dp).clip(CircleShape).background(Coral),
+                contentAlignment = Alignment.Center
+            ) { PlayGlyph(White, 11.dp) }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                "Watch the reader demonstration",
+                fontFamily = BodyFont, fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold, color = Navy, modifier = Modifier.weight(1f)
+            )
+            Text("›", color = Muted, fontSize = 20.sp)
+        }
     }
 }
 
@@ -248,33 +273,6 @@ private fun ReaderFrame(camera: VfaCameraState) {
                 "Line up the top-right corner · keep the membrane centred",
                 fontFamily = BodyFont, fontSize = 11.sp, color = White.copy(alpha = 0.85f)
             )
-        }
-    }
-}
-
-@Composable
-private fun WatchRow(onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        color = White,
-        border = androidx.compose.foundation.BorderStroke(1.5.dp, Line)
-    ) {
-        Row(
-            Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                Modifier.size(30.dp).clip(CircleShape).background(Coral),
-                contentAlignment = Alignment.Center
-            ) { PlayGlyph(White, 11.dp) }
-            Spacer(Modifier.width(12.dp))
-            Text(
-                "Watch the reader demonstration",
-                fontFamily = BodyFont, fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold, color = Navy, modifier = Modifier.weight(1f)
-            )
-            Text("›", color = Muted, fontSize = 20.sp)
         }
     }
 }

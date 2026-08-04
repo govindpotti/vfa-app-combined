@@ -9,7 +9,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.core.resolutionselector.AspectRatioStrategy
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
@@ -29,6 +28,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.io.File
 import kotlin.coroutines.resume
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,30 +105,34 @@ class VfaCameraState internal constructor(private val context: Context) {
     suspend fun capture(): ByteArray? {
         if (!granted) return null
         return suspendCancellableCoroutine { cont ->
+            val file = File.createTempFile("vfa-capture-", ".jpg", context.cacheDir)
+            cont.invokeOnCancellation { file.delete() }
             try {
                 controller.takePicture(
+                    ImageCapture.OutputFileOptions.Builder(file).build(),
                     ContextCompat.getMainExecutor(context),
-                    object : ImageCapture.OnImageCapturedCallback() {
-                        override fun onCaptureSuccess(image: ImageProxy) {
+                    object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                             val bytes = try {
-                                val buffer = image.planes[0].buffer
-                                ByteArray(buffer.remaining()).also { buffer.get(it) }
+                                file.readBytes()
                             } catch (e: Exception) {
-                                Log.w(TAG, "could not read captured frame", e)
+                                Log.w(TAG, "could not read captured JPEG", e)
                                 null
                             } finally {
-                                image.close()
+                                file.delete()
                             }
                             if (cont.isActive) cont.resume(bytes)
                         }
 
                         override fun onError(exception: ImageCaptureException) {
+                            file.delete()
                             Log.w(TAG, "capture failed", exception)
                             if (cont.isActive) cont.resume(null)
                         }
                     }
                 )
             } catch (e: Exception) {
+                file.delete()
                 Log.w(TAG, "capture unavailable", e)
                 if (cont.isActive) cont.resume(null)
             }

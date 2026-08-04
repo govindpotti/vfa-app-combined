@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+fun String.asBuildConfigString(): String =
+    "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+
 android {
     namespace = "com.vfa.app"
     compileSdk {
@@ -23,8 +26,16 @@ android {
         // The two analysis services (see /server and /step_verifier). Leave empty to run the
         // app fully offline on its simulated checkpoints + result; set them to the deployed
         // base URLs (no trailing path) to use the real analysis.
-        buildConfigField("String", "ANALYZER_URL", "\"\"")
-        buildConfigField("String", "VERIFIER_URL", "\"\"")
+        buildConfigField(
+            "String",
+            "ANALYZER_URL",
+            providers.gradleProperty("ANALYZER_URL").orElse("").get().asBuildConfigString()
+        )
+        buildConfigField(
+            "String",
+            "VERIFIER_URL",
+            providers.gradleProperty("VERIFIER_URL").orElse("").get().asBuildConfigString()
+        )
     }
 
     buildTypes {

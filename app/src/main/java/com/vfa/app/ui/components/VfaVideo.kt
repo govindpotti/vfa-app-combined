@@ -34,7 +34,12 @@ import com.vfa.app.ui.theme.CamDark
  * The frame is centre-cropped so a portrait clip still fills a landscape card.
  */
 @Composable
-fun VfaVideo(@RawRes res: Int, modifier: Modifier = Modifier) {
+fun VfaVideo(
+    @RawRes res: Int,
+    modifier: Modifier = Modifier,
+    cropOffsetX: Float = 0f,
+    cropOffsetY: Float = 0f,
+) {
     val player = remember(res) { MediaPlayer() }
     val lifecycleOwner = LocalLifecycleOwner.current
     var prepared by remember(res) { mutableStateOf(false) }
@@ -85,7 +90,14 @@ fun VfaVideo(@RawRes res: Int, modifier: Modifier = Modifier) {
                                         prepared = true
                                         mp.isLooping = true
                                         mp.setVolume(0f, 0f)
-                                        applyCenterCrop(mp.videoWidth, mp.videoHeight, w, h)
+                                        applyCenterCrop(
+                                            mp.videoWidth,
+                                            mp.videoHeight,
+                                            w,
+                                            h,
+                                            cropOffsetX,
+                                            cropOffsetY
+                                        )
                                         mp.start()
                                     }
                                     player.prepareAsync()
@@ -98,7 +110,16 @@ fun VfaVideo(@RawRes res: Int, modifier: Modifier = Modifier) {
                             }
 
                             override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {
-                                runCatching { applyCenterCrop(player.videoWidth, player.videoHeight, w, h) }
+                                runCatching {
+                                    applyCenterCrop(
+                                        player.videoWidth,
+                                        player.videoHeight,
+                                        w,
+                                        h,
+                                        cropOffsetX,
+                                        cropOffsetY
+                                    )
+                                }
                             }
 
                             override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
@@ -122,7 +143,14 @@ fun VfaVideo(@RawRes res: Int, modifier: Modifier = Modifier) {
     }
 }
 
-private fun TextureView.applyCenterCrop(videoW: Int, videoH: Int, viewW: Int, viewH: Int) {
+private fun TextureView.applyCenterCrop(
+    videoW: Int,
+    videoH: Int,
+    viewW: Int,
+    viewH: Int,
+    cropOffsetX: Float,
+    cropOffsetY: Float,
+) {
     if (videoW <= 0 || videoH <= 0 || viewW <= 0 || viewH <= 0) return
     val scaleX = viewW.toFloat() / videoW
     val scaleY = viewH.toFloat() / videoH
@@ -130,6 +158,7 @@ private fun TextureView.applyCenterCrop(videoW: Int, videoH: Int, viewW: Int, vi
     setTransform(
         Matrix().apply {
             setScale(max / scaleX, max / scaleY, viewW / 2f, viewH / 2f)
+            postTranslate(viewW * cropOffsetX, viewH * cropOffsetY)
         }
     )
 }

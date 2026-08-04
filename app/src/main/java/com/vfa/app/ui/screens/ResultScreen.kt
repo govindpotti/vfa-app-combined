@@ -49,9 +49,18 @@ fun ResultScreen(
     onStartNew: () -> Unit,
     onToggleDemo: () -> Unit,
 ) {
-    val negative = verdict == Verdict.NEGATIVE
-    val accent = if (negative) Green else Terracotta
-    val soft = if (negative) GreenSoft else TerracottaSoft
+    val measured = readout != null
+    val negative = measured && verdict == Verdict.NEGATIVE
+    val accent = when {
+        !measured -> Amber
+        negative -> Green
+        else -> Terracotta
+    }
+    val soft = when {
+        !measured -> Amber.copy(alpha = 0.16f)
+        negative -> GreenSoft
+        else -> TerracottaSoft
+    }
     val antibodies = test?.antibodies ?: "these antibodies"
 
     val t = rememberInfiniteTransition(label = "res")
@@ -80,7 +89,11 @@ fun ResultScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            if (negative) "✓" else "!",
+                            when {
+                                !measured -> "?"
+                                negative -> "✓"
+                                else -> "!"
+                            },
                             color = White, fontSize = if (negative) 38.sp else 42.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -89,14 +102,21 @@ fun ResultScreen(
 
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    if (negative) "RESULT · NEGATIVE" else "RESULT · POSITIVE",
+                    when {
+                        !measured -> "RESULT · NOT MEASURED"
+                        negative -> "RESULT · NEGATIVE"
+                        else -> "RESULT · POSITIVE"
+                    },
                     fontFamily = BodyFont, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold,
                     color = accent, letterSpacing = 1.4.sp
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    if (negative) "No $antibodies found"
-                    else "$antibodies found",
+                    when {
+                        !measured -> "Analyzer did not read this test"
+                        negative -> "No $antibodies found"
+                        else -> "$antibodies found"
+                    },
                     fontFamily = TitleFont, fontSize = 30.sp, fontWeight = FontWeight.Bold,
                     color = Navy, textAlign = TextAlign.Center, lineHeight = 35.sp
                 )
@@ -116,16 +136,25 @@ fun ResultScreen(
                 Spacer(Modifier.height(22.dp))
                 HelpAccordion(
                     label = "What this means",
-                    text = if (negative)
-                        "The test didn't find $antibodies in this blood sample. Antibodies take " +
+                    text = when {
+                        !measured ->
+                            "The analyzer did not return a measured readout, so this screen is " +
+                                "not reporting a real positive or negative result.\n\n" +
+                                "For a real VFA run, build the app with ANALYZER_URL set and make " +
+                                "sure the phone can reach that service before recording a result."
+
+                        negative ->
+                            "The test didn't find $antibodies in this blood sample. Antibodies take " +
                             "time to appear, so a negative result doesn't rule out a recent " +
                             "infection.\n\n" +
                             "This is a screening test, not a diagnosis. Confirm before treating."
-                    else
-                        "The test found $antibodies in this blood sample. That doesn't confirm " +
+
+                        else ->
+                            "The test found $antibodies in this blood sample. That doesn't confirm " +
                             "an active infection on its own — past exposure and cross-reaction " +
                             "with other infections both give a positive here.\n\n" +
                             "This is a screening test, not a diagnosis. Confirm before treating."
+                    }
                 )
 
                 Spacer(Modifier.height(18.dp))
@@ -142,15 +171,23 @@ fun ResultScreen(
                             color = Muted, letterSpacing = 1.2.sp
                         )
                         Spacer(Modifier.height(14.dp))
-                        val steps = if (negative) listOf(
-                            "Record the result against the patient.",
-                            "If the symptoms point to a recent infection, test again later.",
-                            "Put the cassette and used top case in biohazard waste."
-                        ) else listOf(
-                            "Record the result against the patient.",
-                            "Send for a confirmatory test before starting treatment.",
-                            "Put the cassette and used top case in biohazard waste."
-                        )
+                        val steps = when {
+                            !measured -> listOf(
+                                "Do not record this as a positive or negative result.",
+                                "Check the analyzer URL, network connection, and camera alignment.",
+                                "Run the final photo again once the analyzer is reachable."
+                            )
+                            negative -> listOf(
+                                "Record the result against the patient.",
+                                "If the symptoms point to a recent infection, test again later.",
+                                "Put the cassette and used top case in biohazard waste."
+                            )
+                            else -> listOf(
+                                "Record the result against the patient.",
+                                "Send for a confirmatory test before starting treatment.",
+                                "Put the cassette and used top case in biohazard waste."
+                            )
+                        }
                         steps.forEachIndexed { i, text ->
                             Row(verticalAlignment = Alignment.Top) {
                                 Box(
@@ -180,11 +217,13 @@ fun ResultScreen(
 
                 Spacer(Modifier.height(22.dp))
                 CTAButton("Start a new test", onStartNew)
-                Spacer(Modifier.height(6.dp))
-                QuietLink(
-                    if (negative) "Demo: show a positive result" else "Demo: show a negative result",
-                    onToggleDemo
-                )
+                if (measured) {
+                    Spacer(Modifier.height(6.dp))
+                    QuietLink(
+                        if (negative) "Demo: show a positive result" else "Demo: show a negative result",
+                        onToggleDemo
+                    )
+                }
             }
         }
     }

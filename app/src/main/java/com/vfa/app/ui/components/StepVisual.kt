@@ -2,6 +2,7 @@ package com.vfa.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,11 +14,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vfa.app.protocol.Clip
+import com.vfa.app.protocol.Still
 import com.vfa.app.ui.theme.*
 
 /**
@@ -32,10 +36,11 @@ import com.vfa.app.ui.theme.*
 @Composable
 fun StepVisual(
     clips: List<Clip>,
+    still: Still? = null,
     modifier: Modifier = Modifier,
     height: Dp = 232.dp,
 ) {
-    if (clips.isEmpty()) return
+    if (clips.isEmpty() && still == null) return
 
     var selected by remember(clips) { mutableIntStateOf(0) }
 
@@ -53,7 +58,22 @@ fun StepVisual(
                     .clip(RoundedCornerShape(18.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                VfaVideo(clips[selected.coerceIn(clips.indices)].res, Modifier.fillMaxSize())
+                if (clips.isNotEmpty()) {
+                    val clip = clips[selected.coerceIn(clips.indices)]
+                    VfaVideo(
+                        res = clip.res,
+                        modifier = Modifier.fillMaxSize(),
+                        cropOffsetX = clip.cropOffsetX,
+                        cropOffsetY = clip.cropOffsetY
+                    )
+                } else if (still != null) {
+                    Image(
+                        painter = painterResource(still.res),
+                        contentDescription = still.label,
+                        modifier = Modifier.fillMaxSize().background(White).padding(12.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
 
             // Only worth a switch when there is something to switch between.

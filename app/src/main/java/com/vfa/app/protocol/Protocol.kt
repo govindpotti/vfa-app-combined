@@ -43,7 +43,13 @@ enum class ScanKind { BASELINE, FINAL }
  * VFA_App_Real. Where a step has both, the user can switch between them; the render
  * shows the mechanics cleanly, the footage shows a real hand doing it.
  */
-data class Clip(val label: String, @param:RawRes val res: Int)
+data class Clip(
+    val label: String,
+    @param:RawRes val res: Int,
+    val cropOffsetX: Float = 0f,
+    val cropOffsetY: Float = 0f,
+)
+data class Still(val label: String, @param:DrawableRes val res: Int)
 
 data class Stage(
     val type: StageType,
@@ -53,6 +59,7 @@ data class Stage(
     /** Longer "More detail" text, hidden behind the help accordion. */
     val help: String,
     val clips: List<Clip> = emptyList(),
+    val still: Still? = null,
     /** Step id the checkpoint AI grades (see step_verifier/config.py). null = no camera check. */
     val checkpoint: String? = null,
     /** WAIT only. */
@@ -94,6 +101,12 @@ object Protocol {
     private val screwing = Clip("3D render", R.raw.screwing_vfa)
     private val unscrewing = Clip("3D render", R.raw.unscrewing_vfa)
     private val pipettingReal = Clip("Real footage", R.raw.pipetting_real)
+    private val pipettingRealBuffer = Clip(
+        "Real footage",
+        R.raw.pipetting_real,
+        cropOffsetX = 0.10f,
+        cropOffsetY = -0.12f
+    )
     private val readerFootage = Clip("Real footage", R.raw.vfa_initial_video)
     private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
     // Rendered from the reader and cassette STLs — the two actions the earlier
@@ -160,7 +173,7 @@ object Protocol {
                 "the edges.",
             help = "The membrane is what gets read. Don't touch its face or set it down on the " +
                 "surface; fingerprints and fibres both show up in the result.",
-            clips = listOf(unscrewing),
+            still = Still("Bottom case", R.drawable.vfa_bottom_case),
         ),
         Stage(
             type = StageType.SCAN,
@@ -196,7 +209,7 @@ object Protocol {
             help = "Dispense against the side of the well rather than straight onto the " +
                 "membrane. Wait until the well looks empty — liquid left behind carries into the " +
                 "next step and throws the timing out.",
-            clips = listOf(pipetting, pipettingReal),
+            clips = listOf(pipetting, pipettingRealBuffer),
         ),
         Stage(
             type = StageType.REAGENT,
@@ -217,7 +230,7 @@ object Protocol {
                 "through.",
             help = "This pushes the sample the rest of the way through the membrane. Let it " +
                 "clear completely before the timer starts.",
-            clips = listOf(pipetting, pipettingReal),
+            clips = listOf(pipetting, pipettingRealBuffer),
         ),
         Stage(
             type = StageType.WAIT,

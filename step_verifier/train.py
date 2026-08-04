@@ -62,8 +62,11 @@ def train_step(step_id: str, epochs: int, lr: float, batch_size: int, device: st
     weights = (weights / weights.sum() * len(counts)).to(dev)
     criterion = nn.CrossEntropyLoss(weight=weights)
 
-    def run(optimizer, n_epochs, tag, best):
-        best_acc, best_state, patience, bad = best, None, 4, 0
+    best_acc, best_state = 0.0, None
+
+    def run(optimizer, n_epochs, tag):
+        nonlocal best_acc, best_state
+        patience, bad = 4, 0
         for ep in range(n_epochs):
             net.train()
             for x, y in train_loader:
@@ -82,19 +85,18 @@ def train_step(step_id: str, epochs: int, lr: float, batch_size: int, device: st
                     break
         if best_state:
             net.load_state_dict(best_state)
-        return best_acc
 
     # Phase 1: train the head only (backbone frozen).
     head_params = [p for p in net.parameters() if p.requires_grad]
-    best = run(torch.optim.Adam(head_params, lr=lr), epochs, "head", 0.0)
+    run(torch.optim.Adam(head_params, lr=lr), epochs, "head")
     # Phase 2: fine-tune the whole network at a lower LR.
     unfreeze_backbone(net)
-    best = run(torch.optim.Adam(net.parameters(), lr=lr * 0.1), max(2, epochs // 2), "finetune", best)
+    run(torch.optim.Adam(net.parameters(), lr=lr * 0.1), max(2, epochs // 2), "finetune")
 
     out_dir = os.path.join(MODELS_ROOT, step_id)
     save_checkpoint(net, out_dir, class_names, spec.input_size, spec.min_confidence,
-                    extra={"val_accuracy": round(best, 4)})
-    print(f"[{step_id}] saved -> {out_dir}  (best val_acc={best:.3f})")
+                    extra={"val_accuracy": round(best_acc, 4)})
+    print(f"[{step_id}] saved -> {out_dir}  (best val_acc={best_acc:.3f})")
     return True
 
 
