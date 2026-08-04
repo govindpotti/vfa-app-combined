@@ -107,12 +107,9 @@ object Protocol {
         cropOffsetX = 0.10f,
         cropOffsetY = -0.12f
     )
-    private val readerFootage = Clip("Real footage", R.raw.vfa_initial_video)
     private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
-    // Rendered from the reader and cassette STLs — the two actions the earlier
-    // clips never covered: fitting the reader, and loading the bottom case.
-    private val readerMount = Clip("3D render", R.raw.reader_mount_3d)
-    private val cassetteInsert = Clip("3D render", R.raw.cassette_insert_3d)
+    private val attachPhone = Clip("Attach phone", R.raw.attaching_phone)
+    private val attachVfa = Clip("Attach VFA", R.raw.attaching_vfa)
 
     /** The clip used as the landing-screen fallback if the STL can't be read. */
     val heroClip: Clip get() = screwing
@@ -163,7 +160,7 @@ object Protocol {
             help = "The reader blocks outside light so both photos are taken the same way — not " +
                 "too bright, not too dark. Once it's set, leave it alone. The app compares the " +
                 "two photos against each other, so they need matching settings.",
-            clips = listOf(readerMount, readerFootage),
+            clips = listOf(attachPhone),
         ),
         Stage(
             type = StageType.ACTION,
@@ -185,7 +182,7 @@ object Protocol {
             help = "This is the \u201cbefore\u201d photo. The app compares the final photo " +
                 "against it, which is how it tells a real signal from the membrane's own " +
                 "background. Take it on the same reader, at the same settings, as the last photo.",
-            clips = listOf(cassetteInsert, readerFootage),
+            clips = listOf(attachVfa),
         ),
         Stage(
             type = StageType.REAGENT,
@@ -305,7 +302,7 @@ object Protocol {
             help = "Blot, don't wipe — dragging across the membrane smears the colour. Use the " +
                 "same reader and the same settings as the first photo, or the comparison won't " +
                 "hold. Centre the membrane so the left and right of the frame look even.",
-            clips = listOf(cassetteInsert, readerFootage),
+            clips = listOf(attachVfa),
         ),
     )
 
