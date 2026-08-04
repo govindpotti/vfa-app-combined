@@ -4,11 +4,15 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
+import android.util.Size
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
@@ -22,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -39,13 +44,26 @@ import kotlin.coroutines.resume
 // ─────────────────────────────────────────────────────────────────────────────
 
 private const val TAG = "VfaCamera"
+private val PREVIEW_TARGET = Size(960, 720)
+private val CAPTURE_TARGET = Size(1280, 960)
+
+private fun lowPowerSelector(size: Size) = ResolutionSelector.Builder()
+    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+    .setResolutionStrategy(
+        ResolutionStrategy(size, ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)
+    )
+    .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
+    .build()
 
 class VfaCameraState internal constructor(private val context: Context) {
 
     internal val controller: LifecycleCameraController = LifecycleCameraController(context).apply {
         setEnabledUseCases(LifecycleCameraController.IMAGE_CAPTURE)
         imageCaptureMode = ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
+        setPreviewResolutionSelector(lowPowerSelector(PREVIEW_TARGET))
+        setImageCaptureResolutionSelector(lowPowerSelector(CAPTURE_TARGET))
     }
+    private var usingLowPowerTargets = true
 
     /** True once the permission is granted and the preview can be bound. */
     var granted by mutableStateOf(hasPermission(context))
@@ -56,6 +74,32 @@ class VfaCameraState internal constructor(private val context: Context) {
         internal set
 
     val available: Boolean get() = granted
+
+    internal fun bindTo(lifecycleOwner: LifecycleOwner) {
+        if (!granted) return
+
+        runCatching { controller.bindToLifecycle(lifecycleOwner) }
+            .onSuccess { return }
+            .onFailure { first ->
+                if (!usingLowPowerTargets) {
+                    Log.w(TAG, "could not bind camera", first)
+                    granted = false
+                    return
+                }
+
+                Log.w(TAG, "could not bind camera with low-power targets; retrying defaults", first)
+                usingLowPowerTargets = false
+                runCatching {
+                    controller.unbind()
+                    controller.setPreviewResolutionSelector(null)
+                    controller.setImageCaptureResolutionSelector(null)
+                    controller.bindToLifecycle(lifecycleOwner)
+                }.onFailure { second ->
+                    Log.w(TAG, "could not bind camera with default targets", second)
+                    granted = false
+                }
+            }
+    }
 
     /** Grab a still JPEG from the running preview. Returns null if the camera isn't usable. */
     suspend fun capture(): ByteArray? {
@@ -119,8 +163,7 @@ fun rememberVfaCamera(): VfaCameraState {
 
     DisposableEffect(lifecycleOwner, state.granted) {
         if (state.granted) {
-            runCatching { state.controller.bindToLifecycle(lifecycleOwner) }
-                .onFailure { Log.w(TAG, "could not bind camera", it) }
+            state.bindTo(lifecycleOwner)
         }
         onDispose { }
     }

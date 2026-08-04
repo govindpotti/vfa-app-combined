@@ -39,6 +39,17 @@ android {
                 "proguard-rules.pro"
             )
         }
+        create("phone") {
+            initWith(getByName("release"))
+            matchingFallbacks += listOf("release")
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = false
+            isJniDebuggable = false
+            // Installable with adb on the physical LG while keeping release shrinking.
+            optimization {
+                enable = true
+            }
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
