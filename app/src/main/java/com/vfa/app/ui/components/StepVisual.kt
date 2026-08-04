@@ -39,10 +39,11 @@ fun StepVisual(
     still: Still? = null,
     modifier: Modifier = Modifier,
     height: Dp = 232.dp,
+    playSequence: Boolean = false,
 ) {
     if (clips.isEmpty() && still == null) return
 
-    var selected by remember(clips) { mutableIntStateOf(0) }
+    var selected by remember(clips, playSequence) { mutableIntStateOf(0) }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -64,7 +65,13 @@ fun StepVisual(
                         res = clip.res,
                         modifier = Modifier.fillMaxSize(),
                         cropOffsetX = clip.cropOffsetX,
-                        cropOffsetY = clip.cropOffsetY
+                        cropOffsetY = clip.cropOffsetY,
+                        loop = !playSequence,
+                        onEnded = if (playSequence) {
+                            { selected = (selected + 1) % clips.size }
+                        } else {
+                            null
+                        }
                     )
                 } else if (still != null) {
                     Image(
@@ -77,7 +84,7 @@ fun StepVisual(
             }
 
             // Only worth a switch when there is something to switch between.
-            if (clips.size > 1) {
+            if (clips.size > 1 && !playSequence) {
                 Spacer(Modifier.height(10.dp))
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 2.dp),

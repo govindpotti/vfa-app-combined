@@ -7,7 +7,7 @@ import com.vfa.app.R
 // ─────────────────────────────────────────────────────────────────────────────
 // The protocol, as data.
 //
-// The whole 16-stage assay is the [stages] list below, and every screen is derived
+// The whole 17-stage assay is the [stages] list below, and every screen is derived
 // from it. Adding, removing or re-wording a step means editing this list — no screen
 // or navigation code changes. The progress badge, the "STEP · …" kickers and the
 // checkpoint ids all come from here.
@@ -59,6 +59,7 @@ data class Stage(
     /** Longer "More detail" text, hidden behind the help accordion. */
     val help: String,
     val clips: List<Clip> = emptyList(),
+    val playClipsInSequence: Boolean = false,
     val still: Still? = null,
     /** Step id the checkpoint AI grades (see step_verifier/config.py). null = no camera check. */
     val checkpoint: String? = null,
@@ -99,7 +100,8 @@ object Protocol {
     // demonstrations (from VFA_App_Real). Every hands-on stage points at one or both.
     private val pipetting = Clip("3D render", R.raw.pipetting_vfa)
     private val screwing = Clip("3D render", R.raw.screwing_vfa)
-    private val swapTopSequence = Clip("Swap top", R.raw.swap_top_sequence)
+    private val unscrewing = Clip("Unscrew", R.raw.unscrewing_vfa)
+    private val attachNewTop = Clip("Attach new top", R.raw.attach_new_top)
     private val pipettingReal = Clip("Real footage", R.raw.pipetting_real)
     private val pipettingRealBuffer = Clip(
         "Real footage",
@@ -109,7 +111,7 @@ object Protocol {
     )
     private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
     private val attachPhone = Clip("Attach phone", R.raw.attaching_phone)
-    private val attachVfa = Clip("Attach VFA", R.raw.attaching_vfa)
+    private val attachBottomHalf = Clip("Attach bottom half", R.raw.attached_bottom_half)
 
     /** The clip used as the landing-screen fallback if the STL can't be read. */
     val heroClip: Clip get() = screwing
@@ -174,6 +176,17 @@ object Protocol {
             still = Still("Bottom case", R.drawable.vfa_bottom_case),
         ),
         Stage(
+            type = StageType.ACTION,
+            kicker = "SET UP · READER",
+            title = "Attach bottom half",
+            instruction = "Slide the bottom half into the smartphone reader so the membrane is " +
+                "in position for the first photo.",
+            help = "This puts the membrane in the same reader position the analyzer will use " +
+                "again at the end. Handle the bottom half by the edges and keep the membrane " +
+                "face clean.",
+            clips = listOf(attachBottomHalf),
+        ),
+        Stage(
             type = StageType.SCAN,
             scan = ScanKind.BASELINE,
             kicker = "PHOTO · BEFORE",
@@ -183,7 +196,7 @@ object Protocol {
             help = "This is the \u201cbefore\u201d photo. The app compares the final photo " +
                 "against it, which is how it tells a real signal from the membrane's own " +
                 "background. Take it on the same reader, at the same settings, as the last photo.",
-            clips = listOf(attachVfa),
+            clips = listOf(attachBottomHalf),
         ),
         Stage(
             type = StageType.ACTION,
@@ -258,7 +271,8 @@ object Protocol {
             instruction = "Unscrew the used top case and put a fresh one on the same bottom case.",
             help = "The used top case has blood in it — put it straight into biohazard waste, " +
                 "and never use it on another test. The bottom case, with the membrane, stays.",
-            clips = listOf(swapTopSequence),
+            clips = listOf(unscrewing, attachNewTop),
+            playClipsInSequence = true,
         ),
         Stage(
             type = StageType.REAGENT,
@@ -323,7 +337,7 @@ object Protocol {
             help = "Blot, don't wipe — dragging across the membrane smears the colour. Use the " +
                 "same reader and the same settings as the first photo, or the comparison won't " +
                 "hold. Centre the membrane so the left and right of the frame look even.",
-            clips = listOf(attachVfa),
+            clips = listOf(attachBottomHalf),
         ),
     )
 

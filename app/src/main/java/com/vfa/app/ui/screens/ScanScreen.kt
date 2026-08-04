@@ -95,7 +95,11 @@ fun ScanScreen(
                         color = Scan, letterSpacing = 1.4.sp
                     )
                     Spacer(Modifier.height(14.dp))
-                    StepVisual(clips = stage.clips, height = 300.dp)
+                    StepVisual(
+                        clips = stage.clips,
+                        height = 300.dp,
+                        playSequence = stage.playClipsInSequence
+                    )
                     Spacer(Modifier.height(16.dp))
                     GhostButton("Close") { showDemo = false }
                 }

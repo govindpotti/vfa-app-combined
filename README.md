@@ -35,28 +35,29 @@ only mock up.
    through to the result.
 3. **What you need** — all eight items checked off before the timed steps start.
 
-**The 16-stage protocol** — every stage is a row in [`Protocol.stages`](app/src/main/java/com/vfa/app/protocol/Protocol.kt):
+**The 17-stage protocol** — every stage is a row in [`Protocol.stages`](app/src/main/java/com/vfa/app/protocol/Protocol.kt):
 
 | # | Stage | Type | Camera |
 |---|---|---|---|
 | 1 | Attach phone to reader | action | |
 | 2 | Take the bottom case | action | |
-| 3 | **First photo** | scan | reader photo, before anything is added |
-| 4 | Take phone out | action | |
-| 5 | Assemble the cassette | reagent | checkpoint `assemble` |
-| 6 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
-| 7 | Add the blood sample | reagent | checkpoint `add_sample` |
-| 8 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
-| 9 | Wait 10 minutes | timer | |
-| 10 | Swap the top case | reagent | checkpoint `swap_case` |
-| 11 | Add 200 pL gold solution | reagent | checkpoint `add_gold` |
-| 12 | Add 50 pL gold solution | reagent | checkpoint `add_gold` |
-| 13 | Last wash, 200 pL running buffer | reagent | checkpoint `add_buffer` |
-| 14 | Wait 10 minutes | timer | |
-| 15 | Put phone back | action | |
-| 16 | **Last photo** | scan | reader photo → analyze → result |
+| 3 | Attach bottom half | action | |
+| 4 | **First photo** | scan | reader photo, before anything is added |
+| 5 | Take phone out | action | |
+| 6 | Assemble the cassette | reagent | checkpoint `assemble` |
+| 7 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
+| 8 | Add the blood sample | reagent | checkpoint `add_sample` |
+| 9 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
+| 10 | Wait 10 minutes | timer | |
+| 11 | Swap the top case | reagent | checkpoint `swap_case` |
+| 12 | Add 200 pL gold solution | reagent | checkpoint `add_gold` |
+| 13 | Add 50 pL gold solution | reagent | checkpoint `add_gold` |
+| 14 | Last wash, 200 pL running buffer | reagent | checkpoint `add_buffer` |
+| 15 | Wait 10 minutes | timer | |
+| 16 | Put phone back | action | |
+| 17 | **Last photo** | scan | reader photo → analyze → result |
 
-> **Check the picolitre volumes before deployment.** Stages 11–13 are carried over verbatim from
+> **Check the picolitre volumes before deployment.** Stages 12–14 are carried over verbatim from
 > the source protocol, which specifies 200 pL, 50 pL and 200 pL. Those are four orders of
 > magnitude below what an air-displacement pipette can deliver — almost certainly µL in the
 > original. The app states whatever this table says, so correcting it is a one-line edit in
@@ -78,17 +79,17 @@ Every hands-on stage plays a looping, silent clip. There are two kinds and some 
 switchable with a chip:
 
 - **3D render** — Blender renders of the real cassette (`pipetting_vfa`, `screwing_vfa`,
-  `swap_top_sequence`, from the guided app). Clean mechanics: where the liquid goes, which way
-  the case twists.
-- **Real footage** — filmed lab demonstrations (`attaching_phone`, `attaching_vfa`,
+  `unscrewing_vfa`, `attach_new_top`, from the guided app). Clean mechanics: where the liquid
+  goes, which way the case twists.
+- **Real footage** — filmed lab demonstrations (`attaching_phone`, `attached_bottom_half`,
   `vfa_assemble_video`, from VFA_App_Real). A real gloved hand doing the real thing.
 
 Two short attachment clips cover the reader-specific actions:
 
 | Clip | Shows | Used on |
 |---|---|---|
-| `attaching_phone` | the phone being attached to the smartphone reader | step 1, *Fit the reader* |
-| `attaching_vfa` | the VFA/bottom case being loaded into the smartphone reader | steps 3 and 14, the two photo steps |
+| `attaching_phone` | the phone being attached to the smartphone reader | steps 1 and 16 |
+| `attached_bottom_half` | the bottom half being loaded into the smartphone reader | step 3 and the two photo demos |
 
 Both are short, loop silently, and are paced to be followed in real time rather than skimmed.
 
@@ -225,7 +226,7 @@ vfa-app-combined/
 │  ├─ java/com/vfa/app/
 │  │  ├─ MainActivity.kt          # edge-to-edge single activity
 │  │  ├─ VfaApp.kt                # the flow: front matter, then Protocol.stages
-│  │  ├─ protocol/Protocol.kt     # THE PROTOCOL — 16 stages + the kit, as data
+│  │  ├─ protocol/Protocol.kt     # THE PROTOCOL — 17 stages + the kit, as data
 │  │  ├─ backend/VfaBackend.kt    # /verify + /analyze, with graceful fallback
 │  │  ├─ camera/VfaCamera.kt      # one CameraX session: preview + still capture
 │  │  ├─ ui/theme/                # palette, type, text-size scaling
@@ -233,7 +234,7 @@ vfa-app-combined/
 │  │  └─ ui/screens/              # landing, test select, materials, step,
 │  │                              #   checkpoint, timer, scan, result
 │  ├─ res/drawable/               # the five product photographs
-│  ├─ res/raw/                    # seven bundled clips for the step visuals
+│  ├─ res/raw/                    # eight bundled clips for the step visuals
 │  └─ assets/VFAcomb.stl          # the print geometry, rendered on the landing screen
 ├─ server/                        # readout analyzer (Flask + OpenCV)
 ├─ VFA_analyzer/                  # the lab's spot-quantification pipeline, unchanged
@@ -245,7 +246,7 @@ vfa-app-combined/
 
 ## Status & caveats
 
-- **Guided flow:** complete and verified end to end on the emulator, all 16 stages → result.
+- **Guided flow:** complete and verified end to end on the emulator, all 17 stages → result.
 - **Camera:** live at every checkpoint and both reader photos, and the captured JPEG is what gets
   POSTed. Verified on the emulator's virtual scene.
 - **Analysis:** both services are real code but not deployed. Until they are, checkpoints pass

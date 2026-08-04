@@ -15,6 +15,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -39,10 +40,13 @@ fun VfaVideo(
     modifier: Modifier = Modifier,
     cropOffsetX: Float = 0f,
     cropOffsetY: Float = 0f,
+    loop: Boolean = true,
+    onEnded: (() -> Unit)? = null,
 ) {
     val player = remember(res) { MediaPlayer() }
     val lifecycleOwner = LocalLifecycleOwner.current
     var prepared by remember(res) { mutableStateOf(false) }
+    val currentOnEnded by rememberUpdatedState(onEnded)
 
     DisposableEffect(res) {
         onDispose {
@@ -88,7 +92,7 @@ fun VfaVideo(
                                     }
                                     player.setOnPreparedListener { mp ->
                                         prepared = true
-                                        mp.isLooping = true
+                                        mp.isLooping = loop
                                         mp.setVolume(0f, 0f)
                                         applyCenterCrop(
                                             mp.videoWidth,
@@ -99,6 +103,9 @@ fun VfaVideo(
                                             cropOffsetY
                                         )
                                         mp.start()
+                                    }
+                                    player.setOnCompletionListener {
+                                        if (!loop) currentOnEnded?.invoke()
                                     }
                                     player.prepareAsync()
                                 }.onFailure {
@@ -126,6 +133,7 @@ fun VfaVideo(
                                 prepared = false
                                 runCatching {
                                     player.setOnPreparedListener(null)
+                                    player.setOnCompletionListener(null)
                                     player.reset()
                                     player.setSurface(null)
                                 }

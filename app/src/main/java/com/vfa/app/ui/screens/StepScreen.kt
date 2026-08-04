@@ -39,7 +39,11 @@ fun StepScreen(
             )
 
             Column(Modifier.padding(top = 16.dp, start = 24.dp, end = 24.dp)) {
-                StepVisual(clips = stage.clips, still = stage.still)
+                StepVisual(
+                    clips = stage.clips,
+                    still = stage.still,
+                    playSequence = stage.playClipsInSequence
+                )
 
                 Spacer(Modifier.height(18.dp))
                 Text(
