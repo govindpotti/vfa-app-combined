@@ -7,7 +7,7 @@ import com.vfa.app.R
 // ─────────────────────────────────────────────────────────────────────────────
 // The protocol, as data.
 //
-// The whole 14-stage assay is the [stages] list below, and every screen is derived
+// The whole 16-stage assay is the [stages] list below, and every screen is derived
 // from it. Adding, removing or re-wording a step means editing this list — no screen
 // or navigation code changes. The progress badge, the "STEP · …" kickers and the
 // checkpoint ids all come from here.
@@ -154,12 +154,13 @@ object Protocol {
         Stage(
             type = StageType.ACTION,
             kicker = "SET UP · READER",
-            title = "Fit the reader",
-            instruction = "Fit the reader over the phone camera. Adjust the shutter speed until " +
-                "the membrane looks evenly lit.",
+            title = "Attach phone to reader",
+            instruction = "Put the phone into the smartphone reader so the reader fits over the " +
+                "phone camera. Adjust the shutter speed until the membrane looks evenly lit.",
             help = "The reader blocks outside light so both photos are taken the same way — not " +
-                "too bright, not too dark. Once it's set, leave it alone. The app compares the " +
-                "two photos against each other, so they need matching settings.",
+                "too bright, not too dark. Use this same phone-and-reader position for the " +
+                "first and last photos. The app compares the two photos against each other, " +
+                "so they need matching settings.",
             clips = listOf(attachPhone),
         ),
         Stage(
@@ -183,6 +184,16 @@ object Protocol {
                 "against it, which is how it tells a real signal from the membrane's own " +
                 "background. Take it on the same reader, at the same settings, as the last photo.",
             clips = listOf(attachVfa),
+        ),
+        Stage(
+            type = StageType.ACTION,
+            kicker = "SET UP · PHONE",
+            title = "Take phone out",
+            instruction = "Remove the phone from the reader after the first photo. Keep the " +
+                "reader nearby, because the phone goes back into it for the final analyzer photo.",
+            help = "The middle steps use the phone camera to check the hands-on work from " +
+                "outside the reader. Do not change the reader or bottom-case position more than " +
+                "needed; the final photo should match the first photo as closely as possible.",
         ),
         Stage(
             type = StageType.REAGENT,
@@ -292,13 +303,23 @@ object Protocol {
                 "weaker than it is; leaving it much longer lets the background darken.",
         ),
         Stage(
+            type = StageType.ACTION,
+            kicker = "SET UP · READER",
+            title = "Put phone back",
+            instruction = "Put the phone back into the smartphone reader before the analyzer " +
+                "photo. Use the same reader position and camera settings as the first photo.",
+            help = "The analyzer depends on the before and after photos matching. Re-seat the " +
+                "phone in the reader, then load the bottom case for the final photo.",
+            clips = listOf(attachPhone),
+        ),
+        Stage(
             type = StageType.SCAN,
             scan = ScanKind.FINAL,
             kicker = "PHOTO · RESULT",
             title = "Last photo",
             instruction = "Blot the membrane with a lint-free wipe, put the bottom case in the " +
-                "reader, and take the photo. Line up the top-right corner and keep the membrane " +
-                "centred.",
+                "reader, and take the analyzer photo. Line up the top-right corner and keep the " +
+                "membrane centred.",
             help = "Blot, don't wipe — dragging across the membrane smears the colour. Use the " +
                 "same reader and the same settings as the first photo, or the comparison won't " +
                 "hold. Centre the membrane so the left and right of the frame look even.",

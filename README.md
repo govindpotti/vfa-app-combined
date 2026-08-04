@@ -6,7 +6,7 @@ imaged through a **3D-printed reader that clips over the phone camera**.
 
 It is built for point of care: a nurse or clinician takes the blood sample and runs the test
 there and then, in a clinic that has a pipette but not a lab. The app carries the protocol so
-nobody has to hold fourteen timed steps in their head, checks each hands-on step through the
+nobody has to hold the whole timed workflow in their head, checks each hands-on step through the
 camera, and standardises the read — which is what makes a result from one clinic mean the same
 thing as a result from another.
 
@@ -18,7 +18,7 @@ This repo merges two earlier prototypes:
 | Source | What was taken |
 |---|---|
 | [`september2027/VFA_App_Real`](https://github.com/september2027/VFA_App_Real) | The whole visual design — warm ivory canvas, coral accent, navy serif headlines, soft blobs, pill CTAs, the step indicator — plus the **product photographs** behind the materials page and the two **filmed demonstrations**. |
-| [`govindpotti/vfa-guided-app`](https://github.com/govindpotti/vfa-guided-app) | The **14-stage protocol engine**, the **camera checkpoints**, the accessibility model (text size, language), the **Blender-rendered clips**, the **STL cassette geometry**, and the whole **backend** (`server/`, `VFA_analyzer/`, `step_verifier/`). |
+| [`govindpotti/vfa-guided-app`](https://github.com/govindpotti/vfa-guided-app) | The **protocol engine**, the **camera checkpoints**, the accessibility model (text size, language), the **Blender-rendered clips**, the **STL cassette geometry**, and the whole **backend** (`server/`, `VFA_analyzer/`, `step_verifier/`). |
 
 It is a single **native Jetpack Compose** app — no WebView shell. Going native is what lets the
 camera actually open at each checkpoint and at both reader photos, which the WebView build could
@@ -35,26 +35,28 @@ only mock up.
    through to the result.
 3. **What you need** — all eight items checked off before the timed steps start.
 
-**The 14-stage protocol** — every stage is a row in [`Protocol.stages`](app/src/main/java/com/vfa/app/protocol/Protocol.kt):
+**The 16-stage protocol** — every stage is a row in [`Protocol.stages`](app/src/main/java/com/vfa/app/protocol/Protocol.kt):
 
 | # | Stage | Type | Camera |
 |---|---|---|---|
-| 1 | Fit the reader | action | |
+| 1 | Attach phone to reader | action | |
 | 2 | Take the bottom case | action | |
 | 3 | **First photo** | scan | reader photo, before anything is added |
-| 4 | Assemble the cassette | reagent | checkpoint `assemble` |
-| 5 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
-| 6 | Add the blood sample | reagent | checkpoint `add_sample` |
-| 7 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
-| 8 | Wait 10 minutes | timer | |
-| 9 | Swap the top case | reagent | checkpoint `swap_case` |
-| 10 | Add 200 pL gold solution | reagent | checkpoint `add_gold` |
-| 11 | Add 50 pL gold solution | reagent | checkpoint `add_gold` |
-| 12 | Last wash, 200 pL running buffer | reagent | checkpoint `add_buffer` |
-| 13 | Wait 10 minutes | timer | |
-| 14 | **Last photo** | scan | reader photo → analyze → result |
+| 4 | Take phone out | action | |
+| 5 | Assemble the cassette | reagent | checkpoint `assemble` |
+| 6 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
+| 7 | Add the blood sample | reagent | checkpoint `add_sample` |
+| 8 | Add 200 µL running buffer | reagent | checkpoint `add_buffer` |
+| 9 | Wait 10 minutes | timer | |
+| 10 | Swap the top case | reagent | checkpoint `swap_case` |
+| 11 | Add 200 pL gold solution | reagent | checkpoint `add_gold` |
+| 12 | Add 50 pL gold solution | reagent | checkpoint `add_gold` |
+| 13 | Last wash, 200 pL running buffer | reagent | checkpoint `add_buffer` |
+| 14 | Wait 10 minutes | timer | |
+| 15 | Put phone back | action | |
+| 16 | **Last photo** | scan | reader photo → analyze → result |
 
-> **Check the picolitre volumes before deployment.** Stages 10–12 are carried over verbatim from
+> **Check the picolitre volumes before deployment.** Stages 11–13 are carried over verbatim from
 > the source protocol, which specifies 200 pL, 50 pL and 200 pL. Those are four orders of
 > magnitude below what an air-displacement pipette can deliver — almost certainly µL in the
 > original. The app states whatever this table says, so correcting it is a one-line edit in
@@ -223,7 +225,7 @@ vfa-app-combined/
 │  ├─ java/com/vfa/app/
 │  │  ├─ MainActivity.kt          # edge-to-edge single activity
 │  │  ├─ VfaApp.kt                # the flow: front matter, then Protocol.stages
-│  │  ├─ protocol/Protocol.kt     # THE PROTOCOL — 14 stages + the kit, as data
+│  │  ├─ protocol/Protocol.kt     # THE PROTOCOL — 16 stages + the kit, as data
 │  │  ├─ backend/VfaBackend.kt    # /verify + /analyze, with graceful fallback
 │  │  ├─ camera/VfaCamera.kt      # one CameraX session: preview + still capture
 │  │  ├─ ui/theme/                # palette, type, text-size scaling
@@ -231,7 +233,7 @@ vfa-app-combined/
 │  │  └─ ui/screens/              # landing, test select, materials, step,
 │  │                              #   checkpoint, timer, scan, result
 │  ├─ res/drawable/               # the five product photographs
-│  ├─ res/raw/                    # seven clips (5 renders + 2 filmed)
+│  ├─ res/raw/                    # seven bundled clips for the step visuals
 │  └─ assets/VFAcomb.stl          # the print geometry, rendered on the landing screen
 ├─ server/                        # readout analyzer (Flask + OpenCV)
 ├─ VFA_analyzer/                  # the lab's spot-quantification pipeline, unchanged
@@ -243,7 +245,7 @@ vfa-app-combined/
 
 ## Status & caveats
 
-- **Guided flow:** complete and verified end to end on the emulator, all 14 stages → result.
+- **Guided flow:** complete and verified end to end on the emulator, all 16 stages → result.
 - **Camera:** live at every checkpoint and both reader photos, and the captured JPEG is what gets
   POSTed. Verified on the emulator's virtual scene.
 - **Analysis:** both services are real code but not deployed. Until they are, checkpoints pass
