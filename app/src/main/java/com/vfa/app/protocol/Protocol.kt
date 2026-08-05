@@ -99,9 +99,10 @@ object Protocol {
     // The Blender renders of the cassette (from the guided app) and the filmed
     // demonstrations (from VFA_App_Real). Every hands-on stage points at one or both.
     private val pipetting = Clip("3D render", R.raw.pipetting_vfa)
+    private val pipettingNewTop = Clip("3D render", R.raw.pipetting_new_top)
     private val screwing = Clip("3D render", R.raw.screwing_vfa)
     private val unscrewing = Clip("Unscrew", R.raw.unscrewing_vfa)
-    private val attachNewTop = Clip("Attach new top", R.raw.screwing_vfa)
+    private val attachNewTop = Clip("Attach new top", R.raw.screw_new_top)
     private val pipettingReal = Clip("Real footage", R.raw.pipetting_real)
     private val pipettingRealBuffer = Clip(
         "Real footage",
@@ -283,7 +284,7 @@ object Protocol {
                 "drained through.",
             help = "The gold solution is what brings the colour out on the spots. Mix it gently " +
                 "before you draw it up — it settles — and try not to introduce bubbles.",
-            clips = listOf(pipetting, pipettingReal),
+            clips = listOf(pipettingNewTop),
         ),
         Stage(
             type = StageType.REAGENT,
@@ -294,7 +295,7 @@ object Protocol {
                 "through.",
             help = "A smaller amount this time. Same technique — mix, dispense against the side " +
                 "of the well, wait for it to clear.",
-            clips = listOf(pipetting, pipettingReal),
+            clips = listOf(pipettingNewTop),
         ),
         Stage(
             type = StageType.REAGENT,
@@ -304,7 +305,7 @@ object Protocol {
             instruction = "Add 200 pL of running buffer to wash out anything left over.",
             help = "Gold solution left on the membrane darkens the background and makes the " +
                 "result harder to read. Let this wash clear completely.",
-            clips = listOf(pipetting, pipettingReal),
+            clips = listOf(pipettingNewTop),
         ),
         Stage(
             type = StageType.WAIT,
