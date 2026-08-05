@@ -24,10 +24,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.vfa.app.camera.CameraViewfinder
@@ -62,9 +64,11 @@ fun ScanScreen(
 ) {
     var phase by remember(stage) { mutableStateOf(ScanPhase.ALIGN) }
     var showDemo by remember(stage) { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(stage, phase) {
         if (phase == ScanPhase.CAPTURING) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             val frame = camera.capture()
             // Hold the scan animation long enough to read as "working", even when the
             // analyzer answers instantly (or isn't there at all).
@@ -132,7 +136,13 @@ fun ScanScreen(
                         fontFamily = BodyFont, fontSize = 15.sp, color = Navy, lineHeight = 23.sp
                     )
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(12.dp))
+                    SpokenSubtitle(
+                        text = stage.cue,
+                        spokenText = scanNarration(stage, stageNumber, stageTotal)
+                    )
+
+                    Spacer(Modifier.height(14.dp))
                     ReaderFrame(camera)
 
                     if (stage.clips.isNotEmpty()) {
@@ -155,15 +165,27 @@ fun ScanScreen(
         ScanPhase.CAPTURING -> CapturingScreen(
             kicker = stage.kicker,
             title = stage.title,
-            isFinal = stage.scan == ScanKind.FINAL
+            isFinal = stage.scan == ScanKind.FINAL,
+            cue = if (stage.scan == ScanKind.FINAL) {
+                "Hold steady while the analyzer photo is saved."
+            } else {
+                "Hold steady while the baseline photo is saved."
+            }
         )
     }
 }
 
+private fun scanNarration(stage: Stage, stageNumber: Int, stageTotal: Int): String =
+    "Step $stageNumber of $stageTotal. ${stage.title}. ${stage.instruction} ${stage.cue}"
+
 @Composable
 private fun WatchRow(onClick: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     Surface(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().clickable {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
         shape = RoundedCornerShape(16.dp),
         color = White,
         border = androidx.compose.foundation.BorderStroke(1.5.dp, Line)
@@ -283,7 +305,8 @@ private fun ReaderFrame(camera: VfaCameraState) {
 
 /** Full-bleed "reading the membrane" state — the sweep from the guided app. */
 @Composable
-private fun CapturingScreen(kicker: String, title: String, isFinal: Boolean) {
+private fun CapturingScreen(kicker: String, title: String, isFinal: Boolean, cue: String) {
+    SpeakOnChange("$title. $cue")
     val t = rememberInfiniteTransition(label = "cap")
     val sweep by t.animateFloat(
         0f, 1f,

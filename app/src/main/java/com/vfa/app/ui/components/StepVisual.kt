@@ -14,8 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -63,7 +67,9 @@ fun StepVisual(
                     val clip = clips[selected.coerceIn(clips.indices)]
                     VfaVideo(
                         res = clip.res,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .semantics { contentDescription = "Demonstration video: ${clip.label}" },
                         cropOffsetX = clip.cropOffsetX,
                         cropOffsetY = clip.cropOffsetY,
                         loop = !playSequence,
@@ -106,10 +112,14 @@ private fun VisualChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    val haptic = LocalHapticFeedback.current
     val bg by animateColorAsState(if (active) Coral else White, label = "chipBg")
     val fg by animateColorAsState(if (active) White else Navy, label = "chipFg")
     Surface(
-        modifier = modifier.height(36.dp).clickable(onClick = onClick),
+        modifier = modifier.height(36.dp).clickable {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
         shape = CircleShape,
         color = bg,
         border = if (active) null else BorderStroke(1.5.dp, Line)

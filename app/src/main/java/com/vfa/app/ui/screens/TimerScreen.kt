@@ -22,6 +22,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,12 +49,14 @@ fun TimerScreen(
     stageTotal: Int,
 ) {
     var remaining by remember(stage) { mutableIntStateOf(stage.seconds) }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(stage) {
         while (remaining > 0) {
             delay(1000)
             remaining -= 1
         }
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         onDone()
     }
 
@@ -97,7 +101,13 @@ fun TimerScreen(
                     textAlign = TextAlign.Center, lineHeight = 21.sp
                 )
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(14.dp))
+                SpokenSubtitle(
+                    text = stage.cue,
+                    spokenText = "Step $stageNumber of $stageTotal. ${stage.title}. ${stage.instruction} ${stage.cue}"
+                )
+
+                Spacer(Modifier.height(20.dp))
 
                 Box(
                     Modifier.size(248.dp),

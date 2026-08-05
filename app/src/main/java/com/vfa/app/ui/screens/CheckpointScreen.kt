@@ -24,6 +24,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,7 @@ import com.vfa.app.camera.VfaCameraState
 import com.vfa.app.protocol.Stage
 import com.vfa.app.ui.components.AmberButton
 import com.vfa.app.ui.components.GhostButton
+import com.vfa.app.ui.components.SpeakOnChange
 import com.vfa.app.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -65,6 +68,7 @@ fun CheckpointScreen(
     var reason by remember(stage) { mutableStateOf("") }
     var attempt by remember(stage) { mutableIntStateOf(0) }
     var simulated by remember(stage) { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(stage, attempt) {
         phase = Phase.POSITIONING
@@ -108,6 +112,31 @@ fun CheckpointScreen(
     }
 
     val bg by animateColorAsState(if (phase == Phase.RETRY) AmberInk.copy(alpha = 0.96f) else CamDarker, label = "bg")
+    val statusTitle = when (phase) {
+        Phase.POSITIONING -> "Point the camera at the cassette"
+        Phase.ANALYZING -> "Hold steady"
+        Phase.PASS -> if (simulated) "Moving on" else "Checked"
+        Phase.RETRY -> "Not quite right"
+    }
+    val spokenStatus = when (phase) {
+        Phase.POSITIONING -> "Point the camera at the cassette for ${stage.title}."
+        Phase.ANALYZING -> "Hold steady while this step is checked."
+        Phase.PASS -> if (simulated) {
+            "This step was not checked by the verifier. Moving on."
+        } else {
+            "Checked. Continuing."
+        }
+        Phase.RETRY -> "Not quite right. ${reason.ifBlank { "Check the step and try again." }}"
+    }
+
+    SpeakOnChange(spokenStatus)
+    LaunchedEffect(phase) {
+        when (phase) {
+            Phase.ANALYZING -> haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            Phase.PASS, Phase.RETRY -> haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            else -> Unit
+        }
+    }
 
     Column(
         Modifier
@@ -125,12 +154,7 @@ fun CheckpointScreen(
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            when (phase) {
-                Phase.POSITIONING -> "Point the camera at the cassette"
-                Phase.ANALYZING -> "Hold steady"
-                Phase.PASS -> if (simulated) "Moving on" else "Checked"
-                Phase.RETRY -> "Not quite right"
-            },
+            statusTitle,
             fontFamily = TitleFont, fontSize = 26.sp, fontWeight = FontWeight.Bold,
             color = White, textAlign = TextAlign.Center, lineHeight = 30.sp
         )

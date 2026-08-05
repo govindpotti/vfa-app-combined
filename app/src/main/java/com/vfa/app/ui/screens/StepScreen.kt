@@ -57,7 +57,13 @@ fun StepScreen(
                     fontFamily = BodyFont, fontSize = 16.sp, color = Navy, lineHeight = 24.sp
                 )
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(14.dp))
+                SpokenSubtitle(
+                    text = stage.cue,
+                    spokenText = stepNarration(stage, stageNumber, stageTotal)
+                )
+
+                Spacer(Modifier.height(14.dp))
                 HelpAccordion(stage.help)
 
                 Spacer(Modifier.height(24.dp))
@@ -69,3 +75,6 @@ fun StepScreen(
         }
     }
 }
+
+private fun stepNarration(stage: Stage, stageNumber: Int, stageTotal: Int): String =
+    "Step $stageNumber of $stageTotal. ${stage.title}. ${stage.instruction} ${stage.cue}"

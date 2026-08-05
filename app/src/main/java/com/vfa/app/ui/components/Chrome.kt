@@ -31,6 +31,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -247,12 +249,16 @@ fun CTAButton(
     disabledLabel: String? = null,
 ) {
     val interaction = remember { MutableInteractionSource() }
+    val haptic = LocalHapticFeedback.current
     val pressed by interaction.collectIsPressedAsState()
     val scale by androidx.compose.animation.core.animateFloatAsState(
         if (pressed && !disabled) 0.985f else 1f, label = "press"
     )
     Button(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            onClick()
+        },
         enabled = !disabled,
         interactionSource = interaction,
         modifier = modifier
@@ -288,8 +294,12 @@ fun CTAButton(
 /** Recover / try again. Amber, warm, never alarming. */
 @Composable
 fun AmberButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     Button(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         modifier = modifier.fillMaxWidth().height(54.dp),
         colors = ButtonDefaults.buttonColors(containerColor = Amber, contentColor = White),
         shape = CircleShape
@@ -301,11 +311,15 @@ fun AmberButton(label: String, modifier: Modifier = Modifier, onClick: () -> Uni
 /** Quiet secondary action. */
 @Composable
 fun GhostButton(label: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .height(52.dp)
-            .clickable(onClick = onClick),
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            },
         shape = CircleShape,
         color = White,
         border = BorderStroke(1.5.dp, Line)
@@ -319,10 +333,14 @@ fun GhostButton(label: String, modifier: Modifier = Modifier, onClick: () -> Uni
 /** Underlined text action for the low-stakes escape hatches ("Skip the wait"). */
 @Composable
 fun QuietLink(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val haptic = LocalHapticFeedback.current
     Text(
         label,
         modifier = modifier
-            .clickable(onClick = onClick)
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
             .padding(vertical = 10.dp, horizontal = 8.dp),
         fontFamily = BodyFont,
         fontSize = 13.sp,
@@ -364,6 +382,7 @@ fun HelpAccordion(
     label: String = "More detail",
 ) {
     var open by remember(text) { mutableStateOf(false) }
+    val haptic = LocalHapticFeedback.current
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -374,7 +393,10 @@ fun HelpAccordion(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clickable { open = !open }
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        open = !open
+                    }
                     .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
