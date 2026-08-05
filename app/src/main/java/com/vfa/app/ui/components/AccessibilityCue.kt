@@ -131,7 +131,7 @@ private fun SubtitleCue(
 
 private fun String.toSpeechFriendly(): String =
     replace("µL", " microliters")
-        .replace("pL", " microliters")
+        .replace("pL", " picoliters")
         .replace("—", ", ")
         .replace("·", ", ")
         .replace("…", ".")

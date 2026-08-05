@@ -297,7 +297,7 @@ object Protocol {
             checkpoint = "add_gold",
             kicker = "STEP · GOLD SOLUTION",
             title = "Add gold solution",
-            instruction = "Add 200 µL of gold solution to the well. Wait until it has all " +
+            instruction = "Add 200 pL of gold solution to the well. Wait until it has all " +
                 "drained through.",
             cue = "Mix the gold gently first. Dispense slowly against the side of the well.",
             help = "The gold solution is what brings the colour out on the spots. Mix it gently " +
@@ -309,7 +309,7 @@ object Protocol {
             checkpoint = "add_gold",
             kicker = "STEP · GOLD SOLUTION",
             title = "Add gold solution",
-            instruction = "Add another 50 µL of gold solution. Wait until it has all drained " +
+            instruction = "Add another 50 pL of gold solution. Wait until it has all drained " +
                 "through.",
             cue = "Use the smaller volume. Wait until the well clears before continuing.",
             help = "A smaller amount this time. Same technique — mix, dispense against the side " +
@@ -321,7 +321,7 @@ object Protocol {
             checkpoint = "add_buffer",
             kicker = "STEP · LAST WASH",
             title = "Last wash",
-            instruction = "Add 200 µL of running buffer to wash out anything left over.",
+            instruction = "Add 200 pL of running buffer to wash out anything left over.",
             cue = "Wash slowly and let it drain completely so the background stays clear.",
             help = "Gold solution left on the membrane darkens the background and makes the " +
                 "result harder to read. Let this wash clear completely.",
