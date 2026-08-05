@@ -83,14 +83,16 @@ switchable with a chip:
   Clean mechanics: where the liquid goes, which way the case twists. The top-case swap plays
   `unscrewing_vfa` and then `screw_new_top` as one sequence.
 - **Real footage** — filmed lab demonstrations (`attaching_phone`, `attached_bottom_half`,
-  `vfa_assemble_video`, from VFA_App_Real). A real gloved hand doing the real thing.
+  `reader_attach_bottom_half`, `vfa_assemble_video`, from VFA_App_Real). A real gloved hand
+  doing the real thing.
 
 Two short attachment clips cover the reader-specific actions:
 
 | Clip | Shows | Used on |
 |---|---|---|
-| `attaching_phone` | the phone being attached to the smartphone reader | steps 1 and 16 |
+| `attaching_phone` | the phone being attached to the smartphone reader | step 1 |
 | `attached_bottom_half` | the bottom half being loaded into the smartphone reader | step 3 and the two photo demos |
+| `reader_attach_bottom_half` | the phone and bottom half being loaded into the reader together | step 16 |
 
 Both are short, loop silently, and are paced to be followed in real time rather than skimmed.
 
@@ -235,7 +237,7 @@ vfa-app-combined/
 │  │  └─ ui/screens/              # landing, test select, materials, step,
 │  │                              #   checkpoint, timer, scan, result
 │  ├─ res/drawable/               # the five product photographs
-│  ├─ res/raw/                    # eight bundled clips for the step visuals
+│  ├─ res/raw/                    # ten bundled clips for the step visuals
 │  └─ assets/VFAcomb.stl          # the print geometry, rendered on the landing screen
 ├─ server/                        # readout analyzer (Flask + OpenCV)
 ├─ VFA_analyzer/                  # the lab's spot-quantification pipeline, unchanged

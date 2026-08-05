@@ -113,6 +113,10 @@ object Protocol {
     private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
     private val attachPhone = Clip("Attach phone", R.raw.attaching_phone)
     private val attachBottomHalf = Clip("Attach bottom half", R.raw.attached_bottom_half)
+    private val attachReaderAndBottomHalf = Clip(
+        "Attach reader",
+        R.raw.reader_attach_bottom_half
+    )
 
     /** The clip used as the landing-screen fallback if the STL can't be read. */
     val heroClip: Clip get() = screwing
@@ -321,11 +325,12 @@ object Protocol {
             type = StageType.ACTION,
             kicker = "SET UP · READER",
             title = "Put phone back",
-            instruction = "Put the phone back into the smartphone reader before the analyzer " +
-                "photo. Use the same reader position and camera settings as the first photo.",
+            instruction = "Put the phone back into the smartphone reader, then load the bottom " +
+                "half before the analyzer photo. Use the same reader position and camera settings " +
+                "as the first photo.",
             help = "The analyzer depends on the before and after photos matching. Re-seat the " +
                 "phone in the reader, then load the bottom case for the final photo.",
-            clips = listOf(attachPhone),
+            clips = listOf(attachReaderAndBottomHalf),
         ),
         Stage(
             type = StageType.SCAN,
