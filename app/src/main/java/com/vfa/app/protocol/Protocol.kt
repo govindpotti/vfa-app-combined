@@ -56,8 +56,10 @@ data class Stage(
     val kicker: String,
     val title: String,
     val instruction: String,
-    /** Short subtitle / spoken cue for the exact physical action. */
+    /** Short subtitle cue for the exact physical action. */
     val cue: String = "",
+    /** Separate audio script. This is spoken aloud instead of reading the UI text verbatim. */
+    val narration: String = "",
     /** Longer "More detail" text, hidden behind the help accordion. */
     val help: String,
     val clips: List<Clip> = emptyList(),
@@ -70,6 +72,9 @@ data class Stage(
     /** SCAN only. */
     val scan: ScanKind? = null,
 )
+
+fun Stage.spokenGuidance(stageNumber: Int, stageTotal: Int): String =
+    "Step $stageNumber of $stageTotal. " + narration.ifBlank { cue }
 
 /** The tests this kit runs. Same steps either way; different antibodies, different result. */
 enum class TestType(
@@ -167,6 +172,7 @@ object Protocol {
             instruction = "Put the phone into the smartphone reader so the reader fits over the " +
                 "phone camera. Adjust the shutter speed until the membrane looks evenly lit.",
             cue = "Push the phone in until it sits flat in the reader. The camera should be fully covered.",
+            narration = "Place the phone into the reader now. Press it in until it sits flat, with the camera fully covered by the reader opening. When the preview looks evenly lit, continue.",
             help = "The reader blocks outside light so both photos are taken the same way — not " +
                 "too bright, not too dark. Use this same phone-and-reader position for the " +
                 "first and last photos. The app compares the two photos against each other, " +
@@ -180,6 +186,7 @@ object Protocol {
             instruction = "Take the bottom case — the half with the membrane in it. Hold it by " +
                 "the edges.",
             cue = "Hold only the edges. Keep fingers away from the membrane face.",
+            narration = "Pick up the bottom case by the side edges only. Keep your fingers off the membrane face. Hold it level and membrane side up.",
             help = "The membrane is what gets read. Don't touch its face or set it down on the " +
                 "surface; fingerprints and fibres both show up in the result.",
             still = Still("Bottom case", R.drawable.vfa_bottom_case),
@@ -191,6 +198,7 @@ object Protocol {
             instruction = "Slide the bottom half into the smartphone reader so the membrane is " +
                 "in position for the first photo.",
             cue = "Slide it in until it stops. Do not force it past the stop.",
+            narration = "Slide the bottom half into the reader. Move slowly until you feel it reach the stop. Once it stops, do not push harder.",
             help = "This puts the membrane in the same reader position the analyzer will use " +
                 "again at the end. Handle the bottom half by the edges and keep the membrane " +
                 "face clean.",
@@ -204,6 +212,7 @@ object Protocol {
             instruction = "Put the bottom case in the reader and photograph the membrane before " +
                 "anything is added. Line up the top-right corner.",
             cue = "Hold steady. Match the top-right corner and keep the membrane centered.",
+            narration = "This is the baseline photo. Keep the phone and reader still. Line up the top right corner in the guide, keep the membrane centered, then take the photo.",
             help = "This is the \u201cbefore\u201d photo. The app compares the final photo " +
                 "against it, which is how it tells a real signal from the membrane's own " +
                 "background. Take it on the same reader, at the same settings, as the last photo.",
@@ -216,6 +225,7 @@ object Protocol {
             instruction = "Remove the phone and the bottom half from the reader after the first " +
                 "photo. Keep the reader nearby, because both go back in for the final analyzer photo.",
             cue = "Take out both pieces gently. Keep the membrane facing up and clean.",
+            narration = "Remove the phone from the reader, then remove the bottom half as well. Keep the membrane facing up and do not touch it. Set the reader nearby for the final photo.",
             help = "The middle steps use the phone camera to check the hands-on work from " +
                 "outside the reader. Keep holding the bottom half by the edges, and do not touch " +
                 "the membrane. The final photo should match the first photo as closely as possible.",
@@ -228,6 +238,7 @@ object Protocol {
             instruction = "Screw a top case onto the bottom case until it sits flat, with no gap " +
                 "around the edge.",
             cue = "Twist until it stops. Go until you cannot turn it anymore, then stop.",
+            narration = "Place a top case onto the bottom case. Twist it closed until it stops. Go until you cannot turn it anymore, then stop. Check that the top sits flat with no gap around the edge.",
             help = "Line the well up over the membrane, then twist until it stops. If it isn't " +
                 "fully closed it leaks around the edge and the liquid won't flow straight down " +
                 "through the membrane.",
@@ -241,6 +252,7 @@ object Protocol {
             instruction = "Add 200 µL of running buffer to the well. Wait until it has all " +
                 "drained through.",
             cue = "Touch the pipette tip to the side of the well. Dispense slowly and wait until the well is empty.",
+            narration = "Add the running buffer now. Rest the pipette tip against the inside wall of the well. Dispense slowly down the side, then wait until the well looks empty.",
             help = "Dispense against the side of the well rather than straight onto the " +
                 "membrane. Wait until the well looks empty — liquid left behind carries into the " +
                 "next step and throws the timing out.",
@@ -254,6 +266,7 @@ object Protocol {
             instruction = "Add the patient's blood sample to the well. Wait until it has all " +
                 "drained through.",
             cue = "Use a fresh tip. Dispense against the side of the well, then wait for the liquid to drain.",
+            narration = "Use a fresh tip for the patient sample. Touch the tip to the side of the well and dispense slowly. Wait for the sample to drain through before moving on.",
             help = "Check the label against the patient before you add it, and use a fresh tip.",
             clips = listOf(pipetting, pipettingReal),
         ),
@@ -265,6 +278,7 @@ object Protocol {
             instruction = "Add another 200 µL of running buffer. Wait until it has all drained " +
                 "through.",
             cue = "Add it slowly. Do not move on until the well looks empty.",
+            narration = "Add the second running buffer wash. Keep the tip on the side of the well and dispense slowly. Do not continue until the well looks empty.",
             help = "This pushes the sample the rest of the way through the membrane. Let it " +
                 "clear completely before the timer starts.",
             clips = listOf(pipetting, pipettingRealBuffer),
@@ -277,6 +291,7 @@ object Protocol {
             instruction = "Leave the cassette flat and don't move it. You'll be told when the " +
                 "time is up.",
             cue = "Set it down flat. Do not tilt, lift, or bump the cassette during the wait.",
+            narration = "Set the cassette down flat. Leave it alone during the wait. Do not tilt it, lift it, or bump it while the timer runs.",
             help = "Antibodies are sticking to the spots on the membrane as the liquid moves " +
                 "down through it. Moving or tilting the cassette now will skew the result.",
         ),
@@ -287,6 +302,7 @@ object Protocol {
             title = "Swap the top case",
             instruction = "Unscrew the used top case and put a fresh one on the same bottom case.",
             cue = "Unscrew the used top. Place the fresh top on and twist until it stops.",
+            narration = "Unscrew the used top case and remove it from the bottom case. Put a fresh top case on the same bottom half. Twist the fresh top until it stops and sits flat.",
             help = "The used top case has blood in it — put it straight into biohazard waste, " +
                 "and never use it on another test. The bottom case, with the membrane, stays.",
             clips = listOf(unscrewing, attachNewTop),
@@ -300,6 +316,7 @@ object Protocol {
             instruction = "Add 200 pL of gold solution to the well. Wait until it has all " +
                 "drained through.",
             cue = "Mix the gold gently first. Dispense slowly against the side of the well.",
+            narration = "Gently mix the gold solution before drawing it up. Add the gold solution against the side of the well. Dispense slowly, and try not to make bubbles.",
             help = "The gold solution is what brings the colour out on the spots. Mix it gently " +
                 "before you draw it up — it settles — and try not to introduce bubbles.",
             clips = listOf(pipettingNewTop),
@@ -312,6 +329,7 @@ object Protocol {
             instruction = "Add another 50 pL of gold solution. Wait until it has all drained " +
                 "through.",
             cue = "Use the smaller volume. Wait until the well clears before continuing.",
+            narration = "Add the smaller gold solution volume now. Keep the tip against the side of the well. Wait until the liquid has drained before continuing.",
             help = "A smaller amount this time. Same technique — mix, dispense against the side " +
                 "of the well, wait for it to clear.",
             clips = listOf(pipettingNewTop),
@@ -323,6 +341,7 @@ object Protocol {
             title = "Last wash",
             instruction = "Add 200 pL of running buffer to wash out anything left over.",
             cue = "Wash slowly and let it drain completely so the background stays clear.",
+            narration = "Add the final wash. Dispense slowly down the side of the well. Let it drain completely so the membrane background stays as clear as possible.",
             help = "Gold solution left on the membrane darkens the background and makes the " +
                 "result harder to read. Let this wash clear completely.",
             clips = listOf(pipettingNewTop),
@@ -335,6 +354,7 @@ object Protocol {
             instruction = "Start the timer now everything has been added. Leave the cassette " +
                 "flat and don't move it.",
             cue = "Leave the cassette flat. The color is developing now.",
+            narration = "Start the final wait. Leave the cassette flat while the color develops. Do not read it early, and do not move it during the timer.",
             help = "The colour is coming up on the spots. Reading it early makes the result look " +
                 "weaker than it is; leaving it much longer lets the background darken.",
         ),
@@ -346,6 +366,7 @@ object Protocol {
                 "half before the analyzer photo. Use the same reader position and camera settings " +
                 "as the first photo.",
             cue = "Seat the phone first, then slide in the bottom half until it stops.",
+            narration = "Put the phone back into the reader first. Seat it the same way as before. Then slide in the bottom half until it reaches the stop.",
             help = "The analyzer depends on the before and after photos matching. Re-seat the " +
                 "phone in the reader, then load the bottom case for the final photo.",
             clips = listOf(attachReaderAndBottomHalf),
@@ -359,6 +380,7 @@ object Protocol {
                 "reader, and take the analyzer photo. Line up the top-right corner and keep the " +
                 "membrane centred.",
             cue = "Blot straight down. Do not wipe. Hold steady for the final read.",
+            narration = "Blot the membrane straight down with a lint free wipe. Do not drag or wipe across it. Put the bottom case in the reader, line up the top right corner, and hold steady for the final analyzer photo.",
             help = "Blot, don't wipe — dragging across the membrane smears the colour. Use the " +
                 "same reader and the same settings as the first photo, or the comparison won't " +
                 "hold. Centre the membrane so the left and right of the frame look even.",

@@ -36,6 +36,7 @@ import com.vfa.app.camera.CameraViewfinder
 import com.vfa.app.camera.VfaCameraState
 import com.vfa.app.protocol.ScanKind
 import com.vfa.app.protocol.Stage
+import com.vfa.app.protocol.spokenGuidance
 import com.vfa.app.ui.components.*
 import com.vfa.app.ui.theme.*
 import kotlinx.coroutines.delay
@@ -139,7 +140,7 @@ fun ScanScreen(
                     Spacer(Modifier.height(12.dp))
                     SpokenSubtitle(
                         text = stage.cue,
-                        spokenText = scanNarration(stage, stageNumber, stageTotal)
+                        spokenText = stage.spokenGuidance(stageNumber, stageTotal)
                     )
 
                     Spacer(Modifier.height(14.dp))
@@ -174,9 +175,6 @@ fun ScanScreen(
         )
     }
 }
-
-private fun scanNarration(stage: Stage, stageNumber: Int, stageTotal: Int): String =
-    "Step $stageNumber of $stageTotal. ${stage.title}. ${stage.instruction} ${stage.cue}"
 
 @Composable
 private fun WatchRow(onClick: () -> Unit) {

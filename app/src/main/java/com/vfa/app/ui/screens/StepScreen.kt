@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vfa.app.protocol.Stage
+import com.vfa.app.protocol.spokenGuidance
 import com.vfa.app.ui.components.*
 import com.vfa.app.ui.theme.*
 
@@ -60,7 +61,7 @@ fun StepScreen(
                 Spacer(Modifier.height(14.dp))
                 SpokenSubtitle(
                     text = stage.cue,
-                    spokenText = stepNarration(stage, stageNumber, stageTotal)
+                    spokenText = stage.spokenGuidance(stageNumber, stageTotal)
                 )
 
                 Spacer(Modifier.height(14.dp))
@@ -75,6 +76,3 @@ fun StepScreen(
         }
     }
 }
-
-private fun stepNarration(stage: Stage, stageNumber: Int, stageTotal: Int): String =
-    "Step $stageNumber of $stageTotal. ${stage.title}. ${stage.instruction} ${stage.cue}"

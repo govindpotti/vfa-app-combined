@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vfa.app.protocol.Stage
+import com.vfa.app.protocol.spokenGuidance
 import com.vfa.app.ui.components.*
 import com.vfa.app.ui.theme.*
 import kotlinx.coroutines.delay
@@ -104,7 +105,7 @@ fun TimerScreen(
                 Spacer(Modifier.height(14.dp))
                 SpokenSubtitle(
                     text = stage.cue,
-                    spokenText = "Step $stageNumber of $stageTotal. ${stage.title}. ${stage.instruction} ${stage.cue}"
+                    spokenText = stage.spokenGuidance(stageNumber, stageTotal)
                 )
 
                 Spacer(Modifier.height(20.dp))
