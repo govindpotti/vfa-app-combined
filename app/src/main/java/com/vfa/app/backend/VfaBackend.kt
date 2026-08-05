@@ -176,7 +176,7 @@ object VfaBackend {
             requestMethod = "POST"
             doOutput = true
             connectTimeout = 8_000
-            readTimeout = 25_000
+            readTimeout = 90_000
             setRequestProperty("Content-Type", "multipart/form-data; boundary=${body.boundary}")
         }
         return try {

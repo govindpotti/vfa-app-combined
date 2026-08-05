@@ -200,7 +200,7 @@ private fun ReaderFrame(camera: VfaCameraState) {
     Box(
         Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            .aspectRatio(4f / 3f)
             .clip(RoundedCornerShape(24.dp))
             .background(CamDark)
             .border(1.dp, Line, RoundedCornerShape(24.dp)),

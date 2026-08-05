@@ -64,6 +64,7 @@ MEAN_ONLY = [0, 1, 0, 0]  # getStats "commands": std, mean, max, min -> mean onl
 SPOT_KEYS = [k for k in pointMapInit if k not in ("A", "B", "C", "D")]
 MIN_ANALYZER_WIDTH = XMAX + 20
 MIN_ANALYZER_HEIGHT = YMAX + 20
+ANALYZER_SIZE = YMAX - YMIN
 
 app = Flask(__name__)
 
@@ -81,15 +82,39 @@ def normalize_capture(image_bgr):
     )
 
 
-def analyze_prepared_bgr(image_bgr, r=DEFAULT_R):
-    """Return {spot_key: mean_red_intensity} and an alignment error flag for one normalized image."""
+def legacy_crop(image_bgr):
+    """Original desktop/DNG path: upscale, then use the hard-coded analyzer crop."""
     image_bgr = normalize_capture(image_bgr)
     h, w = image_bgr.shape[:2]
     if h < YMAX or w < XMAX:
         raise ValueError(f"image too small after normalization: {w}x{h}")
+    return image_bgr[YMIN:YMAX, XMIN:XMAX]
 
-    cropped = image_bgr[YMIN:YMAX, XMIN:XMAX]
-    aligned, err = alignImage(cropped, "upload", DIST_A_TO_B, MARKER_A, template_dictionary)
+
+def reader_square_crop(image_bgr):
+    """
+    Phone-reader path: the reader photo is centered by the live guide, not by the
+    legacy desktop crop constants. Crop the sensor frame to the centered square the
+    analyzer expects, then resize into the 3600x3600 coordinate system used by the
+    spot map and alignment templates.
+    """
+    h, w = image_bgr.shape[:2]
+    side = min(h, w)
+    if side <= 0:
+        raise ValueError("empty image")
+    x0 = max(0, (w - side) // 2)
+    y0 = max(0, (h - side) // 2)
+    square = image_bgr[y0:y0 + side, x0:x0 + side]
+    return cv2.resize(square, (ANALYZER_SIZE, ANALYZER_SIZE), interpolation=cv2.INTER_CUBIC)
+
+
+def analyze_prepared_bgr(cropped_bgr, r=DEFAULT_R):
+    """Return {spot_key: mean_red_intensity} and an alignment error flag for one cropped image."""
+    h, w = cropped_bgr.shape[:2]
+    if h < ANALYZER_SIZE or w < ANALYZER_SIZE:
+        raise ValueError(f"prepared image too small: {w}x{h}")
+
+    aligned, err = alignImage(cropped_bgr, "upload", DIST_A_TO_B, MARKER_A, template_dictionary)
     point_map, err = localizeWithCentroid(aligned, pointMapInit, False, err)
     red = aligned[:, :, 2]
     generateMask(r)
@@ -101,7 +126,7 @@ def analyze_prepared_bgr(image_bgr, r=DEFAULT_R):
 
 
 def analyze_bgr(image_bgr, r=DEFAULT_R):
-    """Analyze one BGR image, trying common phone orientations before giving up."""
+    """Analyze one BGR image, trying phone framing and common orientations before giving up."""
     candidates = [
         image_bgr,
         cv2.rotate(image_bgr, cv2.ROTATE_90_CLOCKWISE),
@@ -111,13 +136,18 @@ def analyze_bgr(image_bgr, r=DEFAULT_R):
     last_error = None
     fallback = None
     for candidate in candidates:
-        try:
-            spots, err = analyze_prepared_bgr(candidate, r)
-            if not err:
-                return spots, err
-            fallback = fallback or (spots, err)
-        except Exception as exc:  # noqa: BLE001
-            last_error = exc
+        for crop_name, prepare in (
+            ("reader_square", reader_square_crop),
+            ("legacy_crop", legacy_crop),
+        ):
+            try:
+                prepared = prepare(candidate)
+                spots, err = analyze_prepared_bgr(prepared, r)
+                if not err:
+                    return spots, err
+                fallback = fallback or (spots, err)
+            except Exception as exc:  # noqa: BLE001
+                last_error = f"{crop_name}: {exc}"
 
     if fallback is not None:
         return fallback
