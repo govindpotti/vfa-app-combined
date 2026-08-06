@@ -30,10 +30,9 @@ import com.vfa.app.ui.theme.*
 // ─────────────────────────────────────────────────────────────────────────────
 // Kit artwork.
 //
-// Five of the eight items are photographs of the real hardware, carried over from
-// VFA_App_Real — a photo of the actual bottom case is worth more to someone hunting
-// through a box than any icon. The three consumables we have no photo of get drawn
-// emblems in the same warm palette so the grid still reads as one set.
+// Most items are photographs of the real hardware, carried over from VFA_App_Real —
+// a photo of the actual bottom case is worth more to someone hunting through a box
+// than any icon. Anything without a photo gets a drawn emblem in the same palette.
 //
 // Anything needed in multiples is drawn as a stack with a count badge — a run needs
 // two top cases, and one picture of one top case does not say that.

@@ -70,10 +70,10 @@ fun ScanScreen(
     LaunchedEffect(stage, phase) {
         if (phase == ScanPhase.CAPTURING) {
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            delay(2600)
             val frame = camera.capture()
-            // Hold the scan animation long enough to read as "working", even when the
-            // analyzer answers instantly (or isn't there at all).
-            delay(1400)
+            // Keep this screen up long enough for the spoken hold-steady cue to finish.
+            delay(2200)
             onCaptured(frame)
         }
     }
@@ -304,7 +304,6 @@ private fun ReaderFrame(camera: VfaCameraState) {
 /** Full-bleed "reading the membrane" state — the sweep from the guided app. */
 @Composable
 private fun CapturingScreen(kicker: String, title: String, isFinal: Boolean, cue: String) {
-    SpeakOnChange("$title. $cue")
     val t = rememberInfiniteTransition(label = "cap")
     val sweep by t.animateFloat(
         0f, 1f,
@@ -357,6 +356,13 @@ private fun CapturingScreen(kicker: String, title: String, isFinal: Boolean, cue
                     }
             )
         }
+
+        SpokenSubtitle(
+            text = cue,
+            spokenText = "$title. $cue",
+            dark = true
+        )
+        Spacer(Modifier.height(14.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(

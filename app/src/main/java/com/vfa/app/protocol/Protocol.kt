@@ -118,7 +118,8 @@ object Protocol {
         cropOffsetY = -0.12f
     )
     private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
-    private val attachPhone = Clip("Attach phone", R.raw.attaching_phone)
+    private val attachPhone = Clip("3D render", R.raw.attaching_phone)
+    private val attachPhoneFootage = Clip("Real footage", R.raw.attaching_phone_real)
     private val attachBottomHalfFootage = Clip("Real footage", R.raw.attached_bottom_half)
     private val attachReaderAndBottomHalf = Clip(
         "Attach reader",
@@ -151,8 +152,8 @@ object Protocol {
             emblem = KitItem.Emblem.TUBE
         ),
         KitItem(
-            "Gold solution", "Mix it before you draw it up",
-            emblem = KitItem.Emblem.GOLD_BOTTLE
+            "Gold nanoparticles", "Mix gently before you draw them up",
+            photo = R.drawable.gold_nanoparticles
         ),
         KitItem(
             "Pipette and tips", "For the volumes in this test",
@@ -160,7 +161,7 @@ object Protocol {
         ),
         KitItem(
             "Lint-free wipes", "To blot the membrane before the last photo",
-            emblem = KitItem.Emblem.WIPES
+            photo = R.drawable.kimtech_wipes
         ),
     )
 
@@ -177,7 +178,7 @@ object Protocol {
                 "too bright, not too dark. Use this same phone-and-reader position for the " +
                 "first and last photos. The app compares the two photos against each other, " +
                 "so they need matching settings.",
-            clips = listOf(attachPhone),
+            clips = listOf(attachPhone, attachPhoneFootage),
         ),
         Stage(
             type = StageType.ACTION,

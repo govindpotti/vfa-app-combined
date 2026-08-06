@@ -4,13 +4,17 @@ import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,15 +26,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vfa.app.R
 import com.vfa.app.ui.theme.BodyFont
 import com.vfa.app.ui.theme.CamDarker
 import com.vfa.app.ui.theme.LavDeep
@@ -49,15 +57,24 @@ fun SpokenSubtitle(
     dark: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
+    var replay by remember(text, spokenText) { mutableStateOf(0) }
     LaunchedEffect(text) {
         if (text.isNotBlank()) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
-    SpeakOnChange(spokenText)
-    SubtitleCue(text = text, modifier = modifier, dark = dark)
+    SpeakOnChange(spokenText, replay)
+    SubtitleCue(
+        text = text,
+        modifier = modifier,
+        dark = dark,
+        onReplay = {
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            replay += 1
+        }
+    )
 }
 
 @Composable
-fun SpeakOnChange(text: String) {
+fun SpeakOnChange(text: String, replayKey: Int = 0) {
     val context = LocalContext.current
     val currentText by rememberUpdatedState(text)
     var ready by remember { mutableStateOf(false) }
@@ -74,7 +91,7 @@ fun SpeakOnChange(text: String) {
         }
     }
 
-    LaunchedEffect(tts, ready, currentText) {
+    LaunchedEffect(tts, ready, currentText, replayKey) {
         if (!ready || currentText.isBlank()) return@LaunchedEffect
         tts.language = Locale.US
         tts.setSpeechRate(0.92f)
@@ -93,6 +110,7 @@ private fun SubtitleCue(
     text: String,
     modifier: Modifier = Modifier,
     dark: Boolean = false,
+    onReplay: () -> Unit,
 ) {
     if (text.isBlank()) return
 
@@ -105,16 +123,32 @@ private fun SubtitleCue(
         border = BorderStroke(1.dp, if (dark) Scan.copy(alpha = 0.55f) else Line)
     ) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-            Surface(shape = CircleShape, color = if (dark) Scan.copy(alpha = 0.18f) else White) {
-                Text(
-                    "SUBTITLE",
-                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                    fontFamily = BodyFont,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = if (dark) Scan else LavDeep,
-                    letterSpacing = 1.1.sp
-                )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(shape = CircleShape, color = if (dark) Scan.copy(alpha = 0.18f) else White) {
+                    Text(
+                        "SUBTITLE",
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                        fontFamily = BodyFont,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (dark) Scan else LavDeep,
+                        letterSpacing = 1.1.sp
+                    )
+                }
+                IconButton(
+                    onClick = onReplay,
+                    modifier = Modifier.semantics { contentDescription = "Repeat spoken guidance" }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_volume_24),
+                        contentDescription = null,
+                        tint = if (dark) Scan else LavDeep
+                    )
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text(
