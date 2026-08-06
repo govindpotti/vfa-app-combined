@@ -122,7 +122,8 @@ object Protocol {
     private val assembleFootage = Clip("Real footage", R.raw.vfa_assemble_video)
     private val attachPhone = Clip("3D render", R.raw.attaching_phone)
     private val attachPhoneFootage = Clip("Real footage", R.raw.attaching_phone_real)
-    private val attachBottomHalfFootage = Clip("Real footage", R.raw.attached_bottom_half)
+    private val attachBottomHalf = Clip("3D render", R.raw.attached_bottom_half)
+    private val attachBottomHalfFootage = Clip("Real footage", R.raw.attached_bottom_half_real)
     private val attachReaderAndBottomHalf = Clip(
         "Attach reader",
         R.raw.reader_attach_bottom_half
@@ -194,7 +195,7 @@ object Protocol {
             help = "This puts the membrane in the same reader position the analyzer will use " +
                 "again at the end. Handle the bottom half by the edges and keep the membrane " +
                 "face clean.",
-            clips = listOf(attachBottomHalfFootage),
+            clips = listOf(attachBottomHalf, attachBottomHalfFootage),
         ),
         Stage(
             type = StageType.SCAN,
@@ -208,7 +209,7 @@ object Protocol {
             help = "This is the \u201cbefore\u201d photo. The app compares the final photo " +
                 "against it, which is how it tells a real signal from the membrane's own " +
                 "background. Take it on the same reader, at the same settings, as the last photo.",
-            clips = listOf(attachBottomHalfFootage),
+            clips = listOf(attachBottomHalf, attachBottomHalfFootage),
         ),
         Stage(
             type = StageType.ACTION,
@@ -376,7 +377,7 @@ object Protocol {
             help = "Blot, don't wipe — dragging across the membrane smears the colour. Use the " +
                 "same reader and the same settings as the first photo, or the comparison won't " +
                 "hold. Centre the membrane so the left and right of the frame look even.",
-            clips = listOf(attachBottomHalfFootage),
+            clips = listOf(attachBottomHalf, attachBottomHalfFootage),
         ),
     )
 
