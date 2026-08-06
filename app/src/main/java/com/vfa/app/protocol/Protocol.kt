@@ -181,18 +181,6 @@ object Protocol {
         ),
         Stage(
             type = StageType.ACTION,
-            kicker = "SET UP · BOTTOM CASE",
-            title = "Take the bottom case",
-            instruction = "Take the bottom case — the half with the membrane in it. Hold it by " +
-                "the edges.",
-            cue = "Hold only the edges. Keep fingers away from the membrane face.",
-            narration = "Pick up the bottom case by the side edges only. Keep your fingers off the membrane face. Hold it level and membrane side up.",
-            help = "The membrane is what gets read. Don't touch its face or set it down on the " +
-                "surface; fingerprints and fibres both show up in the result.",
-            still = Still("Bottom case", R.drawable.vfa_bottom_case),
-        ),
-        Stage(
-            type = StageType.ACTION,
             kicker = "SET UP · READER",
             title = "Attach bottom half",
             instruction = "Slide the bottom half into the smartphone reader so the membrane is " +
