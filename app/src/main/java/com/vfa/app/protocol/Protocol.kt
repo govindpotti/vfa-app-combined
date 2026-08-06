@@ -95,6 +95,8 @@ data class KitItem(
     val quantity: Int = 1,
     /** Product photo, when we have one for this item. */
     @param:DrawableRes val photo: Int? = null,
+    /** Per-item photo sizing in the materials grid. */
+    val photoScale: Float = 1f,
     /** Otherwise a drawn emblem in the same visual language. */
     val emblem: Emblem? = null,
 ) {
@@ -153,7 +155,8 @@ object Protocol {
         ),
         KitItem(
             "Gold nanoparticles", "Mix gently before you draw them up",
-            photo = R.drawable.gold_nanoparticles
+            photo = R.drawable.gold_nanoparticles,
+            photoScale = 1.22f
         ),
         KitItem(
             "Pipette and tips", "For the volumes in this test",

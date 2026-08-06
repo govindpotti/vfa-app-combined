@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -69,7 +70,9 @@ fun KitArt(item: KitItem, modifier: Modifier = Modifier) {
                 Image(
                     painter = painterResource(photo),
                     contentDescription = item.name,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .scale(item.photoScale),
                     contentScale = ContentScale.Fit
                 )
             }
